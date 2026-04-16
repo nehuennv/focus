@@ -20,7 +20,7 @@ export function useMovement({
   const [facing, setFacing]       = useState<Direction>('down');
   const [isMoving, setIsMoving]   = useState(false);
   const cooldown    = useRef(false);
-  const stopTimer   = useRef<ReturnType<typeof setTimeout>>();
+  const stopTimer   = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const isWalkable = useCallback((x: number, y: number): boolean => {
     if (y < 0 || y >= tileMap.length || x < 0 || x >= tileMap[0].length) return false;
@@ -70,7 +70,9 @@ export function useMovement({
   }, [enabled, facing, isWalkable]);
 
   // Cleanup stop timer on unmount
-  useEffect(() => () => clearTimeout(stopTimer.current), []);
+  useEffect(() => () => {
+    if (stopTimer.current) clearTimeout(stopTimer.current);
+  }, []);
 
   return { position, facing, isMoving };
 }

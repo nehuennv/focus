@@ -11,7 +11,7 @@ const ROWS = 15;
 
 // ─── Tile type IDs ─────────────────────────────────────────────────────────────
 const FLOOR = 0;
-const WALL = 1;
+// const WALL = 1;
 const PORTAL = 2;   // → Ritual
 const SHELF = 3;   // → Bestiario
 const DESK = 4;   // → Dominios
@@ -297,7 +297,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains }: Hub2DProps) {
         />
 
         {/* Layer 1 — Trigger zone glow overlays */}
-        {TRIGGER_ZONES.map(({ key, col, row, span, color, border, tile }) => {
+        {TRIGGER_ZONES.map(({ key, col, row, span, color, tile }) => {
           const isActive = currentTile === tile && !isBlocked;
           // Portal (ritual) - solo un glow rojo difuminado, SIN bordes ni cuadrados
           if (key === 'portal') {
