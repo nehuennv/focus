@@ -12,7 +12,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio('/sounds/bonefire.mp3');
+    audioRef.current = new Audio('sounds/bonefire.mp3');
     audioRef.current.loop = true;
     audioRef.current.play().catch(() => {});
     return () => { audioRef.current?.pause(); audioRef.current = null; };
@@ -23,7 +23,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(iv);
-          new Audio('/sounds/bell.mp3').play().catch(() => {});
+          new Audio('sounds/bell.mp3').play().catch(() => {});
           onFinish();
           return 0;
         }
@@ -81,7 +81,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
       {/* Bonefire GIF */}
       <div className="mb-10">
         <img
-          src="/img/bonefire.gif"
+          src="img/bonefire.gif"
           alt="Fogata"
           style={{
             width: 180,

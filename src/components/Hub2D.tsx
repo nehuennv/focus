@@ -47,24 +47,24 @@ const PLAYER_START = { x: 9, y: 8 };
 // ─── Character sprites ─────────────────────────────────────────────────────────
 const SPRITES: Record<Direction, { idle: string; frames: [string, string] }> = {
   down: {
-    idle: '/img/personaje/de-frente-reposo.png',
-    frames: ['/img/personaje/de-frente-pie-der-adelante.png',
-      '/img/personaje/de-frente-pie-izq-adelante.png'],
+    idle: 'img/personaje/de-frente-reposo.png',
+    frames: ['img/personaje/de-frente-pie-der-adelante.png',
+      'img/personaje/de-frente-pie-izq-adelante.png'],
   },
   up: {
-    idle: '/img/personaje/de-espaldas-reposo.png',
-    frames: ['/img/personaje/de-espaldas-pie-der-adelante.png',
-      '/img/personaje/de-espaldas-pie-izq-adelante.png'],
+    idle: 'img/personaje/de-espaldas-reposo.png',
+    frames: ['img/personaje/de-espaldas-pie-der-adelante.png',
+      'img/personaje/de-espaldas-pie-izq-adelante.png'],
   },
   right: {
-    idle: '/img/personaje/costado-der-pie-der-adelante.png',
-    frames: ['/img/personaje/costado-der-pie-der-adelante.png',
-      '/img/personaje/costado-der-pie-izq-adelante.png'],
+    idle: 'img/personaje/costado-der-pie-der-adelante.png',
+    frames: ['img/personaje/costado-der-pie-der-adelante.png',
+      'img/personaje/costado-der-pie-izq-adelante.png'],
   },
   left: {
-    idle: '/img/personaje/costado-izq-pie-der-adelante.png',
-    frames: ['/img/personaje/costado-izq-pie-der-adelante.png',
-      '/img/personaje/costado-izq-pie-izq-adelante.png'],
+    idle: 'img/personaje/costado-izq-pie-der-adelante.png',
+    frames: ['img/personaje/costado-izq-pie-der-adelante.png',
+      'img/personaje/costado-izq-pie-izq-adelante.png'],
   },
 };
 
@@ -281,7 +281,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains }: Hub2DProps) {
       >
         {/* Layer 0 — Room background */}
         <img
-          src="/img/background-room.png"
+          src="img/background-room.png"
           alt=""
           draggable={false}
           style={{

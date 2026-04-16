@@ -81,17 +81,17 @@ export interface FocusStore {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const BEASTS = {
-  albedo: { id: 'albedo', name: 'Albedo', lore: 'El Erudito de las Mil Tintas. Maestro del conocimiento ancestral.', spriteImg: '/img/pixeladas/albedo.png', bgImg: '/img/pixeladas/albedoBg.png' },
-  alberic: { id: 'alberic', name: 'Alberic', lore: 'El Caballero Dorado. Guardián de la paciencia y la disciplina.', spriteImg: '/img/pixeladas/alberic.png', bgImg: '/img/pixeladas/albericBg.png' },
-  aurelian: { id: 'aurelian', name: 'Aurelian', lore: 'El Emperador Inmortal. Soberano de la voluntad inquebrantable.', spriteImg: '/img/pixeladas/aurelian.png', bgImg: '/img/pixeladas/aurelianBg.png' },
-  horrax: { id: 'horrax', name: 'Horrax', lore: 'El Devorador de Mundos. Terror cósmico sin igual.', spriteImg: '/img/pixeladas/horrax.png', bgImg: '/img/pixeladas/horraxBg.png' },
-  kaelen: { id: 'kaelen', name: 'Kaelen', lore: 'El Cazador Eterno. Persigue a sus presas sin descanso.', spriteImg: '/img/pixeladas/kaelen.png', bgImg: '/img/pixeladas/kaelenBg.png' },
-  lysandra: { id: 'lysandra', name: 'Lysandra', lore: 'La Hechicera de Cristal. Tejedora de ilusiones mortales.', spriteImg: '/img/pixeladas/lysandra.png', bgImg: '/img/pixeladas/lysandraBg.png' },
-  maro: { id: 'maro', name: 'Maro', lore: 'El Arquitecto Olvidado. Constructor de laberintos infinitos.', spriteImg: '/img/pixeladas/maro.png', bgImg: '/img/pixeladas/maroBg.png' },
-  morwenna: { id: 'morwenna', name: 'Morwenna', lore: 'La Bruja del Páramo. Señora de las tormentas y la niebla.', spriteImg: '/img/pixeladas/morwenna.png', bgImg: '/img/pixeladas/morwennaBg.png' },
-  nyr: { id: 'nyr', name: 'Nyr', lore: 'El Mensajero del Vacío. Portador de secretos prohibidos.', spriteImg: '/img/pixeladas/nyr.png', bgImg: '/img/pixeladas/nyrBg.png' },
-  thereon: { id: 'thereon', name: 'Thereon', lore: 'El Cambiaformas. Entidad de mil rostros y un solo propósito.', spriteImg: '/img/pixeladas/thereon.png', bgImg: '/img/pixeladas/thereonBg.png' },
-  vesper: { id: 'vesper', name: 'Vesper', lore: 'La Sombra del Ocaso. Maestra de las artes ocultas.', spriteImg: '/img/pixeladas/vesper.png', bgImg: '/img/pixeladas/vesperBg.png' },
+  albedo: { id: 'albedo', name: 'Albedo', lore: 'El Erudito de las Mil Tintas. Maestro del conocimiento ancestral.', spriteImg: 'img/pixeladas/albedo.png', bgImg: 'img/pixeladas/albedoBg.png' },
+  alberic: { id: 'alberic', name: 'Alberic', lore: 'El Caballero Dorado. Guardián de la paciencia y la disciplina.', spriteImg: 'img/pixeladas/alberic.png', bgImg: 'img/pixeladas/albericBg.png' },
+  aurelian: { id: 'aurelian', name: 'Aurelian', lore: 'El Emperador Inmortal. Soberano de la voluntad inquebrantable.', spriteImg: 'img/pixeladas/aurelian.png', bgImg: 'img/pixeladas/aurelianBg.png' },
+  horrax: { id: 'horrax', name: 'Horrax', lore: 'El Devorador de Mundos. Terror cósmico sin igual.', spriteImg: 'img/pixeladas/horrax.png', bgImg: 'img/pixeladas/horraxBg.png' },
+  kaelen: { id: 'kaelen', name: 'Kaelen', lore: 'El Cazador Eterno. Persigue a sus presas sin descanso.', spriteImg: 'img/pixeladas/kaelen.png', bgImg: 'img/pixeladas/kaelenBg.png' },
+  lysandra: { id: 'lysandra', name: 'Lysandra', lore: 'La Hechicera de Cristal. Tejedora de ilusiones mortales.', spriteImg: 'img/pixeladas/lysandra.png', bgImg: 'img/pixeladas/lysandraBg.png' },
+  maro: { id: 'maro', name: 'Maro', lore: 'El Arquitecto Olvidado. Constructor de laberintos infinitos.', spriteImg: 'img/pixeladas/maro.png', bgImg: 'img/pixeladas/maroBg.png' },
+  morwenna: { id: 'morwenna', name: 'Morwenna', lore: 'La Bruja del Páramo. Señora de las tormentas y la niebla.', spriteImg: 'img/pixeladas/morwenna.png', bgImg: 'img/pixeladas/morwennaBg.png' },
+  nyr: { id: 'nyr', name: 'Nyr', lore: 'El Mensajero del Vacío. Portador de secretos prohibidos.', spriteImg: 'img/pixeladas/nyr.png', bgImg: 'img/pixeladas/nyrBg.png' },
+  thereon: { id: 'thereon', name: 'Thereon', lore: 'El Cambiaformas. Entidad de mil rostros y un solo propósito.', spriteImg: 'img/pixeladas/thereon.png', bgImg: 'img/pixeladas/thereonBg.png' },
+  vesper: { id: 'vesper', name: 'Vesper', lore: 'La Sombra del Ocaso. Maestra de las artes ocultas.', spriteImg: 'img/pixeladas/vesper.png', bgImg: 'img/pixeladas/vesperBg.png' },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
