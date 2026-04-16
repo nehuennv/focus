@@ -24,7 +24,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
-        background: 'rgba(4,4,10,0.92)',
+        background: 'rgba(10,5,4,0.92)',
         backdropFilter: 'blur(2px)',
         fontFamily: '"Press Start 2P", monospace',
         animation: 'fadeup 0.2s ease-out',
@@ -35,7 +35,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
         className="w-full max-w-lg overflow-y-auto"
         style={{
           border: '3px solid #92400e',
-          background: '#09090f',
+          background: '#0a0504',
           boxShadow: '6px 6px 0 0 #000, 0 0 40px rgba(146,64,14,0.2)',
           maxHeight: '90vh',
         }}
@@ -44,8 +44,8 @@ export function SummonModal({ onClose }: SummonModalProps) {
         <div
           className="p-5 text-center sticky top-0 z-10"
           style={{
-            background: '#09090f',
-            borderBottom: '2px solid #1a1408',
+            background: '#0a0504',
+            borderBottom: '2px solid #2a1810',
           }}
         >
           {/* Selected beast bg ghost */}
@@ -56,7 +56,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
             />
           )}
           <div className="relative z-10">
-            <p className="text-[7px] mb-2 tracking-[0.25em]" style={{ color: '#52525b' }}>
+            <p className="text-[7px] mb-2 tracking-[0.25em]" style={{ color: '#8b7355' }}>
               ⸺ ALTAR DE INVOCACIÓN ⸺
             </p>
             <h2
@@ -73,7 +73,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
 
           {/* Subject name */}
           <div className="mb-5">
-            <label className="block text-[7px] mb-3 tracking-widest" style={{ color: '#52525b' }}>
+            <label className="block text-[7px] mb-3 tracking-widest" style={{ color: '#8b7355' }}>
               NOMBRE DE LA MATERIA
             </label>
             <input
@@ -84,19 +84,19 @@ export function SummonModal({ onClose }: SummonModalProps) {
               required
               className="w-full px-4 py-3 text-[8px] text-white placeholder-zinc-700 outline-none"
               style={{
-                border: '2px solid #252535',
-                background: '#07070f',
+                border: '2px solid #3d2817',
+                background: '#0a0504',
                 fontFamily: '"Press Start 2P", monospace',
                 transition: 'border-color 0.15s',
               }}
               onFocus={e => (e.target.style.borderColor = '#92400e')}
-              onBlur={e => (e.target.style.borderColor = '#252535')}
+              onBlur={e => (e.target.style.borderColor = '#3d2817')}
             />
           </div>
 
           {/* Weekly target */}
           <div className="mb-6">
-            <label className="block text-[7px] mb-3 tracking-widest" style={{ color: '#52525b' }}>
+            <label className="block text-[7px] mb-3 tracking-widest" style={{ color: '#8b7355' }}>
               META SEMANAL (minutos)
             </label>
             <input
@@ -108,19 +108,19 @@ export function SummonModal({ onClose }: SummonModalProps) {
               required
               className="w-full px-4 py-3 text-[8px] text-white placeholder-zinc-700 outline-none"
               style={{
-                border: '2px solid #252535',
-                background: '#07070f',
+                border: '2px solid #3d2817',
+                background: '#0a0504',
                 fontFamily: '"Press Start 2P", monospace',
                 transition: 'border-color 0.15s',
               }}
               onFocus={e => (e.target.style.borderColor = '#92400e')}
-              onBlur={e => (e.target.style.borderColor = '#252535')}
+              onBlur={e => (e.target.style.borderColor = '#3d2817')}
             />
           </div>
 
           {/* Beast selection */}
           <div className="mb-6">
-            <label className="block text-[7px] mb-3 tracking-widest" style={{ color: '#52525b' }}>
+            <label className="block text-[7px] mb-3 tracking-widest" style={{ color: '#8b7355' }}>
               GUARDIÁN DEL DOMINIO
             </label>
 
@@ -129,7 +129,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
               className="mb-4 p-4 relative overflow-hidden"
               style={{
                 border: '2px solid #92400e',
-                background: '#0c0800',
+                background: '#0f0804',
               }}
             >
               {selectedBeast?.bgImg && (
@@ -145,7 +145,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
                     height: 56,
                     flexShrink: 0,
                     border: '2px solid #3a1a00',
-                    background: '#07070f',
+                    background: '#0a0504',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -162,7 +162,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
                   <p className="text-[9px] mb-1" style={{ color: '#fbbf24' }}>
                     {selectedBeast?.name}
                   </p>
-                  <p className="text-[6px] italic leading-relaxed" style={{ color: '#4a4a5a' }}>
+                  <p className="text-[6px] italic leading-relaxed" style={{ color: '#5c4a3d' }}>
                     {selectedBeast?.lore}
                   </p>
                 </div>
@@ -173,8 +173,8 @@ export function SummonModal({ onClose }: SummonModalProps) {
             <div
               className="grid grid-cols-4 gap-2 p-3 overflow-y-auto"
               style={{
-                border: '2px solid #1a1a2a',
-                background: '#07070f',
+                border: '2px solid #3d2817',
+                background: '#0a0504',
                 maxHeight: 220,
               }}
             >
@@ -187,8 +187,8 @@ export function SummonModal({ onClose }: SummonModalProps) {
                     onClick={() => setSelectedBeastId(beast.id)}
                     className="flex flex-col items-center p-2"
                     style={{
-                      border: `2px solid ${isSelected ? '#92400e' : '#1a1a2a'}`,
-                      background: isSelected ? '#1c0800' : '#0c0c18',
+                      border: `2px solid ${isSelected ? '#92400e' : '#3d2817'}`,
+                      background: isSelected ? '#1c0800' : '#0f0804',
                       boxShadow: isSelected ? '0 0 8px rgba(146,64,14,0.3)' : 'none',
                       transition: 'border-color 0.1s, background 0.1s',
                       cursor: 'pointer',
@@ -198,8 +198,8 @@ export function SummonModal({ onClose }: SummonModalProps) {
                       style={{
                         width: 36,
                         height: 36,
-                        border: `1px solid ${isSelected ? '#92400e' : '#252535'}`,
-                        background: '#07070f',
+                        border: `1px solid ${isSelected ? '#92400e' : '#3d2817'}`,
+                        background: '#0a0504',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -213,7 +213,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
                         style={{ width: '100%', height: '100%', objectFit: 'contain', imageRendering: 'pixelated' }}
                       />
                     </div>
-                    <span className="text-[5px]" style={{ color: isSelected ? '#fbbf24' : '#52525b' }}>
+                    <span className="text-[5px]" style={{ color: isSelected ? '#fbbf24' : '#8b7355' }}>
                       {beast.name}
                     </span>
                   </button>
@@ -228,7 +228,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
               type="button"
               onClick={onClose}
               className="flex-1 btn-pixel text-[8px] py-3"
-              style={{ borderColor: '#252535', background: '#0c0c18', color: '#71717a' }}
+              style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
             >
               CANCELAR
             </button>

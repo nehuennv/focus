@@ -11,10 +11,10 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
     <div
       className="min-h-screen p-4 md:p-8"
       style={{
-        background: '#07070f',
+        background: '#0a0504',
         backgroundImage:
-          'radial-gradient(ellipse at 30% 20%, rgba(60,10,10,0.12) 0%, transparent 55%),' +
-          'radial-gradient(ellipse at 70% 80%, rgba(40,10,70,0.08) 0%, transparent 55%)',
+          'radial-gradient(ellipse at 30% 20%, rgba(80,30,10,0.15) 0%, transparent 55%),' +
+          'radial-gradient(ellipse at 70% 80%, rgba(60,25,10,0.10) 0%, transparent 55%)',
         fontFamily: '"Press Start 2P", monospace',
         animation: 'fadeup 0.3s ease-out',
       }}
@@ -27,7 +27,7 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
             <button
               onClick={onBackToMenu}
               className="btn-pixel text-[8px] px-3 py-2"
-              style={{ borderColor: '#252535', background: '#0c0c18', color: '#71717a' }}
+              style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
             >
               ← VOLVER
             </button>
@@ -65,8 +65,8 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                 key={entry.beastId}
                 className="relative overflow-hidden"
                 style={{
-                  border: `3px solid ${isLegend ? '#92400e' : isDefeated ? '#3a1a1a' : '#1a1a2a'}`,
-                  background: '#0b0b17',
+                  border: `3px solid ${isLegend ? '#92400e' : isDefeated ? '#3a1a1a' : '#3d2817'}`,
+                  background: '#0f0804',
                   boxShadow: isLegend
                     ? '4px 4px 0 0 #000, 0 0 16px rgba(146,64,14,0.25)'
                     : '4px 4px 0 0 #000',
@@ -85,7 +85,7 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(11,11,23,0.5) 0%, rgba(11,11,23,0.92) 50%)',
+                    background: 'linear-gradient(135deg, rgba(15,8,4,0.5) 0%, rgba(15,8,4,0.92) 50%)',
                   }}
                 />
 
@@ -98,7 +98,7 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                     <span
                       className="text-[7px] tracking-widest"
                       style={{
-                        color: '#252535',
+                        color: '#3d2817',
                         letterSpacing: '0.3em',
                         animation: 'seal-breathe 3s ease-in-out infinite',
                       }}
@@ -117,8 +117,8 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                         width: 80,
                         height: 80,
                         flexShrink: 0,
-                        border: `2px solid ${isDefeated ? '#3a1a1a' : '#1a1a2a'}`,
-                        background: '#07070f',
+                        border: `2px solid ${isDefeated ? '#3a1a1a' : '#3d2817'}`,
+                        background: '#0a0504',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -149,7 +149,7 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                       </h2>
                       <p
                         className="text-[7px] italic leading-relaxed"
-                        style={{ color: isDefeated ? '#4a4a5a' : '#252535' }}
+                        style={{ color: isDefeated ? '#5c4a3d' : '#3d2817' }}
                       >
                         {beast.lore}
                       </p>
@@ -157,15 +157,15 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                   </div>
 
                   {/* Divider */}
-                  <div style={{ height: 1, background: '#181828', marginBottom: 14 }} />
+                  <div style={{ height: 1, background: '#2a1810', marginBottom: 14 }} />
 
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-3">
                     <div
                       className="text-center p-3"
                       style={{
-                        border: `1px solid ${isDefeated ? '#3a1a1a' : '#151525'}`,
-                        background: '#07070f',
+                        border: `1px solid ${isDefeated ? '#3a1a1a' : '#2a1810'}`,
+                        background: '#0a0504',
                       }}
                     >
                       <p className="text-[6px] mb-2 tracking-widest" style={{ color: '#3a3a52' }}>
@@ -181,8 +181,8 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                     <div
                       className="text-center p-3"
                       style={{
-                        border: `1px solid ${isDefeated ? '#1a0a0a' : '#151525'}`,
-                        background: '#07070f',
+                        border: `1px solid ${isDefeated ? '#1a0a0a' : '#2a1810'}`,
+                        background: '#0a0504',
                       }}
                     >
                       <p className="text-[6px] mb-2 tracking-widest" style={{ color: '#3a3a52' }}>

@@ -109,8 +109,10 @@ export function RPGDialogue({
       style={{
         position: 'fixed',
         bottom: 0,
-        left: 0,
-        right: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '840px',
+        maxWidth: 'calc(100% - 40px)',
         zIndex: 200,
         fontFamily: '"Press Start 2P", monospace',
         pointerEvents: 'auto',
@@ -129,8 +131,8 @@ export function RPGDialogue({
             position: 'relative',
             zIndex: 1,
             padding: '5px 14px 8px',
-            background: '#09090b',
-            border: '4px solid #52525b',
+            background: '#0f0804',
+            border: '4px solid #3d2817',
             borderBottom: 'none',
             color: '#fbbf24',
             fontSize: '7px',
@@ -144,10 +146,10 @@ export function RPGDialogue({
       {/* ── Main box ── */}
       <div
         style={{
-          margin: '0 8px 10px',
+          margin: '0 0 10px',
           padding: '16px 20px 12px',
-          background: 'rgba(9, 9, 11, 0.97)',
-          border: '4px solid #52525b',
+          background: 'rgba(15, 8, 4, 0.97)',
+          border: '4px solid #3d2817',
           boxShadow: '0 -8px 60px rgba(0,0,0,0.9), inset 0 0 40px rgba(0,0,0,0.5)',
         }}
       >
@@ -175,7 +177,7 @@ export function RPGDialogue({
         {done && options.length > 0 && (
           <>
             <div
-              style={{ height: 1, background: '#27272a', marginBottom: 12 }}
+              style={{ height: 1, background: '#2a1810', marginBottom: 12 }}
             />
             <div
               ref={listRef}
@@ -187,7 +189,7 @@ export function RPGDialogue({
                 gap: 2,
                 // Slim pixel scrollbar
                 scrollbarWidth: 'thin',
-                scrollbarColor: '#52525b #09090b',
+                scrollbarColor: '#3d2817 #0f0804',
               }}
             >
               {options.map((opt, i) => (
@@ -200,7 +202,7 @@ export function RPGDialogue({
                     textAlign: 'left',
                     padding: '7px 10px',
                     fontSize: '8px',
-                    color: i === cursor ? '#fbbf24' : '#a1a1aa',
+                    color: i === cursor ? '#fbbf24' : '#8b7355',
                     background: i === cursor
                       ? 'rgba(251,191,36,0.10)'
                       : 'transparent',
@@ -232,7 +234,7 @@ export function RPGDialogue({
         <div
           style={{
             marginTop: 10,
-            color: '#3f3f46',
+            color: '#5c4a3d',
             fontSize: '6px',
             display: 'flex',
             gap: 20,

@@ -93,10 +93,10 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
     <div
       className="min-h-screen p-4 md:p-8"
       style={{
-        background: '#07070f',
+        background: '#0a0504',
         backgroundImage:
-          'radial-gradient(ellipse at 50% 0%, rgba(100,60,0,0.12) 0%, transparent 60%),' +
-          'radial-gradient(ellipse at 50% 100%, rgba(40,0,80,0.08) 0%, transparent 60%)',
+          'radial-gradient(ellipse at 50% 0%, rgba(120,60,20,0.12) 0%, transparent 60%),' +
+          'radial-gradient(ellipse at 50% 100%, rgba(60,25,10,0.08) 0%, transparent 60%)',
         fontFamily: '"Press Start 2P", monospace',
         animation: 'fadeup 0.3s ease-out',
       }}
@@ -109,7 +109,7 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
             <button
               onClick={onBackToMenu}
               className="btn-pixel text-[8px] px-3 py-2"
-              style={{ borderColor: '#252535', background: '#0c0c18', color: '#71717a' }}
+              style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
             >
               ← VOLVER
             </button>
@@ -128,7 +128,7 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
           className="mb-8 p-8 text-center relative overflow-hidden"
           style={{
             border: '3px solid #92400e',
-            background: '#0c0800',
+            background: '#0f0804',
             boxShadow: '4px 4px 0 0 #000, 0 0 20px rgba(146,64,14,0.2)',
           }}
         >
@@ -140,7 +140,7 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
             }}
           />
           <div className="relative z-10">
-            <p className="text-[7px] mb-4 tracking-[0.3em]" style={{ color: '#52525b' }}>
+            <p className="text-[7px] mb-4 tracking-[0.3em]" style={{ color: '#8b7355' }}>
               ⸺ RANGO ALCANZADO ⸺
             </p>
             <div
@@ -155,7 +155,7 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
             >
               {currentRank.title.toUpperCase()}
             </h2>
-            <p className="text-[8px] mb-6" style={{ color: '#71717a' }}>
+            <p className="text-[8px] mb-6" style={{ color: '#8b7355' }}>
               {fmt(totalMins)} de maestría acumulada
             </p>
 
@@ -163,8 +163,8 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
             {!isMaxRank && (
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="text-[6px]" style={{ color: '#3a3a52' }}>RANGO ACTUAL</span>
-                  <span className="text-[6px]" style={{ color: '#3a3a52' }}>
+                  <span className="text-[6px]" style={{ color: '#5c4a3d' }}>RANGO ACTUAL</span>
+                  <span className="text-[6px]" style={{ color: '#5c4a3d' }}>
                     {nextRank.title.toUpperCase()} ({nextRank.minMins} min)
                   </span>
                 </div>
@@ -178,7 +178,7 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
                     }}
                   />
                 </div>
-                <p className="text-[6px] mt-2 text-right" style={{ color: '#3a3a52' }}>
+                <p className="text-[6px] mt-2 text-right" style={{ color: '#5c4a3d' }}>
                   {Math.round(progressToNext)}%
                 </p>
               </div>
@@ -193,12 +193,12 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
 
         {/* ── STATS INSCRIPTIONS ───────────────────────────────────── */}
         <div className="mb-8">
-          <p className="text-[7px] text-center mb-4 tracking-[0.2em]" style={{ color: '#3a3a52' }}>
+          <p className="text-[7px] text-center mb-4 tracking-[0.2em]" style={{ color: '#5c4a3d' }}>
             ⸺ INSCRIPCIONES DE BATALLA ⸺
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: 'DOMINIOS FORJADOS', value: totalDomains,    color: '#e4e4e7', border: '#252535' },
+              { label: 'DOMINIOS FORJADOS', value: totalDomains,    color: '#e4e4e7', border: '#3d2817' },
               { label: 'JEFES DERROTADOS',  value: defeatedDomains, color: '#dc2626', border: '#5c1a1a' },
               { label: 'RITUALES TOTALES',  value: totalKills,      color: '#fbbf24', border: '#92400e' },
               { label: 'HORAS DE MAESTRÍA', value: `${totalHours}h`, color: '#4ade80', border: '#14532d' },
@@ -206,9 +206,9 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
               <div
                 key={label}
                 className="p-4 text-center"
-                style={{ border: `2px solid ${border}`, background: '#09090f', boxShadow: '3px 3px 0 0 #000' }}
+                style={{ border: `2px solid ${border}`, background: '#0a0504', boxShadow: '3px 3px 0 0 #000' }}
               >
-                <p className="text-[6px] mb-3 leading-relaxed tracking-wide" style={{ color: '#3a3a52' }}>
+                <p className="text-[6px] mb-3 leading-relaxed tracking-wide" style={{ color: '#5c4a3d' }}>
                   {label}
                 </p>
                 <p className="text-[20px] drop-shadow-[2px_2px_0_#000]" style={{ color }}>
@@ -222,9 +222,9 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
         {/* ── RANK LADDER ──────────────────────────────────────────── */}
         <div
           className="mb-8 p-5"
-          style={{ border: '2px solid #1a1a2a', background: '#09090f', boxShadow: '3px 3px 0 0 #000' }}
+          style={{ border: '2px solid #3d2817', background: '#0a0504', boxShadow: '3px 3px 0 0 #000' }}
         >
-          <p className="text-[7px] text-center mb-5 tracking-[0.2em]" style={{ color: '#3a3a52' }}>
+          <p className="text-[7px] text-center mb-5 tracking-[0.2em]" style={{ color: '#5c4a3d' }}>
             ⸺ ESCALAFÓN DE RANGOS ⸺
           </p>
           <div className="space-y-2">
@@ -236,8 +236,8 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
                   key={rank.title}
                   className="flex items-center gap-3 p-3"
                   style={{
-                    border: `1px solid ${isCurrent ? '#92400e' : isUnlocked ? '#1a1a2a' : '#0f0f18'}`,
-                    background: isCurrent ? '#120800' : isUnlocked ? '#0c0c18' : '#08080f',
+                    border: `1px solid ${isCurrent ? '#92400e' : isUnlocked ? '#3d2817' : '#1a1008'}`,
+                    background: isCurrent ? '#120800' : isUnlocked ? '#0f0804' : '#0a0504',
                     opacity: isUnlocked ? 1 : 0.4,
                   }}
                 >
@@ -252,7 +252,7 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
                       >
                         {rank.title.toUpperCase()}
                       </span>
-                      <span className="text-[6px]" style={{ color: '#2a2a3a' }}>
+                      <span className="text-[6px]" style={{ color: '#3d2817' }}>
                         {rank.minMins} min
                       </span>
                     </div>
@@ -277,9 +277,9 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
         {/* ── TROPHY BADGES ────────────────────────────────────────── */}
         <div
           className="p-5"
-          style={{ border: '2px solid #1a1a2a', background: '#09090f', boxShadow: '3px 3px 0 0 #000' }}
+          style={{ border: '2px solid #3d2817', background: '#0a0504', boxShadow: '3px 3px 0 0 #000' }}
         >
-          <p className="text-[7px] text-center mb-5 tracking-[0.2em]" style={{ color: '#3a3a52' }}>
+          <p className="text-[7px] text-center mb-5 tracking-[0.2em]" style={{ color: '#5c4a3d' }}>
             ⸺ LOGROS INMORTALES ⸺
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -288,8 +288,8 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
                 key={t.id}
                 className="p-4 text-center relative overflow-hidden"
                 style={{
-                  border: `2px solid ${t.unlocked ? t.border : '#151520'}`,
-                  background: t.unlocked ? t.bg : '#08080f',
+                  border: `2px solid ${t.unlocked ? t.border : '#2a1810'}`,
+                  background: t.unlocked ? t.bg : '#0a0504',
                   boxShadow: t.unlocked ? `3px 3px 0 0 #000, 0 0 10px ${t.border}44` : '2px 2px 0 0 #000',
                   opacity: t.unlocked ? 1 : 0.35,
                   animation: t.unlocked && t.id === 'legend' ? 'ember-pulse 2s ease-in-out infinite' : undefined,
@@ -298,18 +298,18 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
                 <div className="text-[24px] mb-2" style={{ filter: t.unlocked ? 'none' : 'grayscale(1)' }}>
                   {t.icon}
                 </div>
-                <p className="text-[7px] mb-1" style={{ color: t.unlocked ? t.color : '#252535' }}>
+                <p className="text-[7px] mb-1" style={{ color: t.unlocked ? t.color : '#3d2817' }}>
                   {t.title}
                 </p>
-                <p className="text-[6px] leading-relaxed" style={{ color: t.unlocked ? '#3a3a52' : '#1a1a28' }}>
+                <p className="text-[6px] leading-relaxed" style={{ color: t.unlocked ? '#5c4a3d' : '#2a1810' }}>
                   {t.desc}
                 </p>
                 {!t.unlocked && (
                   <div
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    style={{ background: 'rgba(7,7,15,0.6)' }}
+                    style={{ background: 'rgba(10,5,4,0.6)' }}
                   >
-                    <span className="text-[10px]" style={{ color: '#1a1a2a' }}>🔒</span>
+                    <span className="text-[10px]" style={{ color: '#3d2817' }}>🔒</span>
                   </div>
                 )}
               </div>

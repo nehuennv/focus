@@ -13,7 +13,7 @@
   }
 
   body {
-    @apply bg-[#07070f] text-white font-pixel;
+    @apply bg-[#0a0504] text-white font-pixel;
   }
 }
 
@@ -23,16 +23,16 @@
 
 /* ── Souls design tokens ── */
 :root {
-  --souls-void:     #07070f;
-  --souls-deep:     #0c0c18;
-  --souls-raised:   #131326;
-  --souls-border:   #252535;
-  --souls-muted:    #52525b;
-  --souls-dimmed:   #3a3a52;
+  --souls-void:     #0a0504;
+  --souls-deep:     #0f0804;
+  --souls-raised:   #1a1008;
+  --souls-border:   #3d2817;
+  --souls-muted:    #8b7355;
+  --souls-dimmed:   #5c4a3d;
   --souls-amber:    #fbbf24;
   --souls-ember:    #92400e;
   --souls-blood:    #7f1d1d;
-  --souls-ash:      #71717a;
+  --souls-ash:      #8b7355;
 }
 
 /* ── Keyframes ── */

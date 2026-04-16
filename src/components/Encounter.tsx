@@ -23,10 +23,10 @@ function ChargeBtn({ label, onClick }: { label: string; onClick: () => void }) {
     <button
       onClick={onClick}
       style={{
-        border:      '2px solid #2a2a3a',
-        background:  '#0c0c18',
-        color:       '#a1a1aa',
-        fontSize:    '8px',
+        border:      '2px solid #3d2817',
+        background:  '#0f0804',
+        color:       '#8b7355',
+        fontSize:    '10px',
         padding:     '8px 14px',
         fontFamily:  '"Press Start 2P", monospace',
         cursor:      'pointer',
@@ -35,12 +35,12 @@ function ChargeBtn({ label, onClick }: { label: string; onClick: () => void }) {
         whiteSpace:  'nowrap',
       }}
       onMouseEnter={e => {
-        (e.target as HTMLButtonElement).style.background = '#161628';
-        (e.target as HTMLButtonElement).style.color = '#e4e4e7';
+        (e.target as HTMLButtonElement).style.background = '#1a1008';
+        (e.target as HTMLButtonElement).style.color = '#c9b896';
       }}
       onMouseLeave={e => {
-        (e.target as HTMLButtonElement).style.background = '#0c0c18';
-        (e.target as HTMLButtonElement).style.color = '#a1a1aa';
+        (e.target as HTMLButtonElement).style.background = '#0f0804';
+        (e.target as HTMLButtonElement).style.color = '#8b7355';
       }}
     >
       {label}
@@ -56,6 +56,8 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
   const [isAttacking, setIsAttacking] = useState(false);
   // flash state for damage preview pulse
   const [flashOn, setFlashOn] = useState(true);
+  // entrance animation phases
+  const [entrancePhase, setEntrancePhase] = useState<'bg' | 'boss' | 'ui' | 'done'>('bg');
 
   const domain = domains.find(d => d.id === domainId);
 
@@ -80,6 +82,14 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
     return () => clearInterval(iv);
   }, [chargedMins, isAttacking]);
 
+  // Entrance animation sequence
+  useEffect(() => {
+    const t1 = setTimeout(() => setEntrancePhase('boss'), 800);   // after bg appears
+    const t2 = setTimeout(() => setEntrancePhase('ui'),   1400);  // after boss appears
+    const t3 = setTimeout(() => setEntrancePhase('done'), 2000);  // all visible
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
   if (!domain) return null;
 
   const beast     = BEASTS[selectedBeastId as keyof typeof BEASTS];
@@ -97,13 +107,13 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
 
   // ─── Glow color per phase ────────────────────────────────────────────────────
   const bossGlow = isAttacking
-    ? 'drop-shadow(0 0 50px rgba(185,28,28,0.55)) drop-shadow(8px 8px 0 rgba(0,0,0,1))'
-    : 'drop-shadow(0 0 30px rgba(107,33,168,0.35)) drop-shadow(8px 8px 0 rgba(0,0,0,1))';
+    ? 'drop-shadow(0 0 50px rgba(185,28,28,0.7)) drop-shadow(8px 8px 0 rgba(0,0,0,1))'
+    : 'drop-shadow(8px 8px 0 rgba(0,0,0,1))';
 
   return (
     <div
       className="relative h-screen w-full overflow-hidden"
-      style={{ background: '#04040a', fontFamily: '"Press Start 2P", monospace' }}
+      style={{ background: '#0a0504', fontFamily: '"Press Start 2P", monospace' }}
     >
 
       {/* ── L0: Beast background ────────────────────────────────────────────── */}
@@ -113,6 +123,8 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
           backgroundImage: `url(${beast?.bgImg})`,
           backgroundSize:  'cover',
           backgroundPosition: 'center',
+          opacity: entrancePhase !== 'bg' ? 1 : 0,
+          transition: 'opacity 1.2s ease-in-out',
         }}
       />
 
@@ -161,7 +173,14 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
       {/* ── L4: Boss sprite ─────────────────────────────────────────────────── */}
       <div
         className="absolute inset-0 flex items-center justify-center"
-        style={{ zIndex: 10, paddingBottom: '180px', paddingTop: '60px' }}
+        style={{
+          zIndex: 10,
+          paddingBottom: '180px',
+          paddingTop: '60px',
+          opacity: entrancePhase === 'bg' ? 0 : (entrancePhase === 'boss' ? 0 : 1),
+          transform: entrancePhase === 'bg' ? 'translateY(40px) scale(0.95)' : 'translateY(0) scale(1)',
+          transition: 'opacity 1s ease-out, transform 1s ease-out',
+        }}
       >
         <img
           src={beast?.spriteImg}
@@ -172,10 +191,11 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
             imageRendering: 'pixelated',
             filter:         isDefeated
               ? 'grayscale(80%) brightness(0.4) drop-shadow(8px 8px 0 rgba(0,0,0,1))'
+              : isAttacking
+              ? `${bossGlow} sepia(0.3) saturate(1.5) hue-rotate(-10deg)`
               : bossGlow,
             animation:      isDefeated ? 'none' : 'float 4s ease-in-out infinite',
             opacity:        isDefeated ? 0.5 : 1,
-            transition:     'filter 0.8s ease, opacity 0.8s ease',
           }}
         />
       </div>
@@ -197,18 +217,21 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
         style={{
           zIndex:        20,
           background:    'rgba(4,4,10,0.88)',
-          borderBottom:  '1px solid #1a1a2a',
+          borderBottom:  '1px solid #3d2817',
           padding:       '10px 20px',
+          opacity: entrancePhase === 'ui' ? 0 : (entrancePhase === 'done' ? 1 : 0),
+          transform: entrancePhase !== 'done' ? 'translateY(-20px)' : 'translateY(0)',
+          transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
         }}
       >
         {/* Back */}
         <button
           onClick={onBack}
           style={{
-            border:     '2px solid #252535',
-            background: '#0c0c18',
-            color:      '#71717a',
-            fontSize:   '7px',
+            border:     '2px solid #3d2817',
+            background: '#0f0804',
+            color:      '#8b7355',
+            fontSize:   '10px',
             padding:    '6px 12px',
             fontFamily: '"Press Start 2P", monospace',
             cursor:     'pointer',
@@ -219,7 +242,7 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
         </button>
 
         {/* Phase label */}
-        <span style={{ fontSize: '7px', color: '#3a3a52', letterSpacing: '0.12em' }}>
+        <span style={{ fontSize: '10px', color: '#8b7355', letterSpacing: '0.12em' }}>
           {isAttacking
             ? `⚔ EN COMBATE · ${fmt(timeLeft)}`
             : chargedMins > 0
@@ -235,7 +258,7 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
               border:     '2px solid #7f1d1d',
               background: '#1a0000',
               color:      '#ef4444',
-              fontSize:   '7px',
+              fontSize:   '10px',
               padding:    '6px 12px',
               fontFamily: '"Press Start 2P", monospace',
               cursor:     'pointer',
@@ -255,8 +278,11 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
         style={{
           zIndex:     20,
           background: 'rgba(4,4,10,0.92)',
-          borderTop:  '2px solid #1a1a2a',
+          borderTop:  '2px solid #3d2817',
           padding:    '14px 20px 18px',
+          opacity: entrancePhase === 'ui' ? 0 : (entrancePhase === 'done' ? 1 : 0),
+          transform: entrancePhase !== 'done' ? 'translateY(20px)' : 'translateY(0)',
+          transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
         }}
       >
 
@@ -265,7 +291,7 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
           <div>
             <h2
               style={{
-                fontSize:   '13px',
+                fontSize:   '16px',
                 color:      isDefeated ? '#52525b' : '#fbbf24',
                 textShadow: '2px 2px 0 #000',
                 letterSpacing: '0.05em',
@@ -273,15 +299,12 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
             >
               {beast?.name}
             </h2>
-            <p style={{ fontSize: '6px', color: '#3a3a52', marginTop: 4, letterSpacing: '0.06em' }}>
-              {beast?.lore}
-            </p>
           </div>
           <div className="text-right">
-            <p style={{ fontSize: '7px', color: '#52525b', letterSpacing: '0.05em' }}>
+            <p style={{ fontSize: '10px', color: '#8b7355', letterSpacing: '0.05em' }}>
               {domain.name}
             </p>
-            <p style={{ fontSize: '6px', color: '#2a2a3a', marginTop: 3 }}>
+            <p style={{ fontSize: '8px', color: '#5c4a3d', marginTop: 3 }}>
               DEUDA SEMANAL: {fmtMins(domain.weeklyTargetMins)}
             </p>
           </div>
@@ -291,10 +314,10 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
         <div style={{ marginBottom: 10 }}>
           {/* Label row */}
           <div className="flex justify-between items-center mb-1">
-            <span style={{ fontSize: '6px', color: '#3a3a52', letterSpacing: '0.1em' }}>
+            <span style={{ fontSize: '10px', color: '#8b7355', letterSpacing: '0.1em' }}>
               DEUDA
             </span>
-            <span style={{ fontSize: '6px', color: '#2a2a3a' }}>
+            <span style={{ fontSize: '10px', color: '#5c4a3d' }}>
               {isDefeated ? '— PURGADA —' : `${fmtMins(visualDebt)} restante`}
             </span>
           </div>
@@ -365,13 +388,13 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
 
           {/* HP numbers */}
           <div className="flex justify-between mt-1">
-            <span style={{ fontSize: '6px', color: '#3a1010' }}>
+            <span style={{ fontSize: '10px', color: '#8b7355' }}>
               {isDefeated ? '0' : fmtMins(domain.currentDebtMins)} / {fmtMins(domain.weeklyTargetMins)}
             </span>
             {hasDamagePreview && (
               <span
                 style={{
-                  fontSize: '6px',
+                  fontSize: '10px',
                   color:    flashOn ? '#dc2626' : '#7f1d1d',
                   transition: 'color 0.15s',
                 }}
@@ -392,7 +415,7 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
               animation: 'ember-pulse 2s ease-in-out infinite',
             }}
           >
-            <span style={{ fontSize: '8px', color: '#fbbf24', letterSpacing: '0.1em' }}>
+            <span style={{ fontSize: '12px', color: '#fbbf24', letterSpacing: '0.1em' }}>
               ✦ DEUDA PURGADA · JEFE DERROTADO ✦
             </span>
           </div>
@@ -405,7 +428,7 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
                 background: 'linear-gradient(to right, transparent, #dc2626)',
               }}
             />
-            <span style={{ fontSize: '7px', color: '#dc2626', letterSpacing: '0.12em' }}>
+            <span style={{ fontSize: '10px', color: '#dc2626', letterSpacing: '0.12em' }}>
               ⚔ RITUAL ACTIVO
             </span>
             <div
@@ -438,10 +461,10 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
                 }
               }}
               style={{
-                border:     chargedMins > 0 ? '2px solid #7f1d1d' : '2px solid #1a1a2a',
+                border:     chargedMins > 0 ? '2px solid #7f1d1d' : '2px solid #3d2817',
                 background: chargedMins > 0 ? '#1a0000' : '#080810',
                 color:      chargedMins > 0 ? '#ef4444' : '#252535',
-                fontSize:   '8px',
+                fontSize:   '12px',
                 padding:    '8px 16px',
                 fontFamily: '"Press Start 2P", monospace',
                 cursor:     chargedMins > 0 ? 'pointer' : 'not-allowed',
@@ -470,6 +493,11 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
         @keyframes ember-pulse {
           0%, 100% { opacity: 0.8; }
           50%       { opacity: 1; }
+        }
+        @keyframes boss-entrance {
+          0%   { opacity: 0; transform: translateY(30px) scale(0.9); filter: blur(8px); }
+          60%  { opacity: 0.8; transform: translateY(-10px) scale(0.95); filter: blur(2px); }
+          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
       `}</style>
     </div>

@@ -37,15 +37,15 @@ export function RestScreen({ onFinish }: RestScreenProps) {
     <div
       className="fixed inset-0 flex flex-col items-center justify-center"
       style={{
-        background: '#04040a',
-        backgroundImage: 'radial-gradient(ellipse at 50% 60%, rgba(180,80,0,0.1) 0%, transparent 55%)',
+        background: '#0a0504',
+        backgroundImage: 'radial-gradient(ellipse at 50% 60%, rgba(180,80,0,0.12) 0%, transparent 55%)',
         fontFamily: '"Press Start 2P", monospace',
       }}
     >
       {/* Top label */}
       <p
         className="text-[7px] tracking-[0.3em] mb-2"
-        style={{ color: '#3a3a52', animation: 'seal-breathe 3s ease-in-out infinite' }}
+        style={{ color: '#5c4a3d', animation: 'seal-breathe 3s ease-in-out infinite' }}
       >
         ⸺ RITUAL CONCLUIDO ⸺
       </p>
@@ -58,7 +58,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
         LA FOGATA
       </h1>
 
-      <p className="text-[7px] mb-10 tracking-widest" style={{ color: '#52525b' }}>
+      <p className="text-[7px] mb-10 tracking-widest" style={{ color: '#8b7355' }}>
         DESCANSA, MAESTRO
       </p>
 
@@ -115,7 +115,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
         <button
           onClick={onFinish}
           className="btn-pixel text-[8px] px-5 py-3"
-          style={{ borderColor: '#252535', background: '#0c0c18', color: '#71717a' }}
+          style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
         >
           CONTINUAR
         </button>
@@ -124,7 +124,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
       {/* Bottom whisper */}
       <p
         className="mt-10 text-[6px] tracking-widest"
-        style={{ color: '#1a1a28', animation: 'seal-breathe 4s ease-in-out infinite' }}
+        style={{ color: '#3d2817', animation: 'seal-breathe 4s ease-in-out infinite' }}
       >
         El fuego se desvanece. El camino espera.
       </p>

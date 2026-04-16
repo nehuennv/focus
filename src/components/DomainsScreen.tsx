@@ -24,10 +24,10 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
       <div
         className="min-h-screen p-4 md:p-8"
         style={{
-          background: '#07070f',
+          background: '#0a0504',
           backgroundImage:
-            'radial-gradient(ellipse at 50% 0%, rgba(120,40,10,0.09) 0%, transparent 65%),' +
-            'radial-gradient(ellipse at 50% 100%, rgba(40,10,80,0.07) 0%, transparent 60%)',
+            'radial-gradient(ellipse at 50% 0%, rgba(120,50,20,0.12) 0%, transparent 65%),' +
+            'radial-gradient(ellipse at 50% 100%, rgba(60,25,10,0.10) 0%, transparent 60%)',
           fontFamily: '"Press Start 2P", monospace',
           animation: 'fadeup 0.3s ease-out',
         }}
@@ -40,7 +40,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
               <button
                 onClick={onBackToMenu}
                 className="btn-pixel text-[8px] px-3 py-2"
-                style={{ borderColor: '#252535', background: '#0c0c18', color: '#71717a' }}
+                style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
               >
                 ← VOLVER
               </button>
@@ -50,11 +50,11 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                   GRIMORIOS DE DOMINIO
                 </h1>
                 <div className="mt-2 flex items-center justify-center gap-3">
-                  <div style={{ height: 1, width: 40, background: '#2a2a3a' }} />
-                  <span className="text-[7px]" style={{ color: '#52525b' }}>
+                  <div style={{ height: 1, width: 40, background: '#3d2817' }} />
+                  <span className="text-[7px]" style={{ color: '#8b7355' }}>
                     {rank.title} · {fmt(player.totalAccumulatedMins)}
                   </span>
-                  <div style={{ height: 1, width: 40, background: '#2a2a3a' }} />
+                  <div style={{ height: 1, width: 40, background: '#3d2817' }} />
                 </div>
               </div>
 
@@ -69,19 +69,19 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
             </div>
 
             {/* Full-width divider */}
-            <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #252535 20%, #252535 80%, transparent)' }} />
+            <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #3d2817 20%, #3d2817 80%, transparent)' }} />
           </header>
 
           {/* ── EMPTY STATE ──────────────────────────────────────────── */}
           {domains.length === 0 && (
             <div
               className="p-12 text-center"
-              style={{ border: '2px solid #1a1a2a', background: '#09090f' }}
+              style={{ border: '2px solid #3d2817', background: '#0a0504' }}
             >
-              <p className="text-[8px] leading-loose mb-2" style={{ color: '#3a3a52' }}>
+              <p className="text-[8px] leading-loose mb-2" style={{ color: '#5c4a3d' }}>
                 ···
               </p>
-              <p className="text-[8px] leading-loose mb-6" style={{ color: '#52525b' }}>
+              <p className="text-[8px] leading-loose mb-6" style={{ color: '#8b7355' }}>
                 Ningún dominio ha sido sellado aún.<br />
                 Acude al altar y forja el primero.
               </p>
@@ -114,7 +114,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                   className="relative overflow-hidden"
                   style={{
                     border: `3px solid ${borderColor}`,
-                    background: '#0c0c18',
+                    background: '#0f0804',
                     boxShadow: '4px 4px 0 0 #000',
                     ...glowStyle,
                   }}
@@ -133,7 +133,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      background: 'linear-gradient(160deg, rgba(12,12,24,0.6) 0%, rgba(12,12,24,0.97) 55%)',
+                      background: 'linear-gradient(160deg, rgba(15,8,4,0.6) 0%, rgba(15,8,4,0.97) 55%)',
                     }}
                   />
 
@@ -152,7 +152,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     {/* Domain name */}
                     <h2
                       className="text-[9px] pr-14 mb-1 leading-relaxed"
-                      style={{ color: isDefeated ? '#3a3a52' : '#fbbf24' }}
+                      style={{ color: isDefeated ? '#5c4a3d' : '#fbbf24' }}
                     >
                       {domain.name}
                     </h2>
@@ -161,21 +161,21 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     {beast?.lore && (
                       <p
                         className="text-[6px] italic pr-14 mb-4 leading-relaxed"
-                        style={{ color: '#3a3a52' }}
+                        style={{ color: '#5c4a3d' }}
                       >
                         {beast.lore}
                       </p>
                     )}
 
                     {/* Divider */}
-                    <div style={{ height: 1, background: '#181828', marginBottom: 12 }} />
+                    <div style={{ height: 1, background: '#2a1810', marginBottom: 12 }} />
 
                     {/* Debt label row */}
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-[7px]" style={{ color: '#3a3a52', letterSpacing: '0.08em' }}>
+                      <span className="text-[7px]" style={{ color: '#5c4a3d', letterSpacing: '0.08em' }}>
                         DEUDA SEMANAL
                       </span>
-                      <span className="text-[7px]" style={{ color: '#2a2a3a' }}>
+                      <span className="text-[7px]" style={{ color: '#3d2817' }}>
                         /{fmt(domain.weeklyTargetMins)}
                       </span>
                     </div>
@@ -199,7 +199,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     </div>
 
                     {/* HP Bar */}
-                    <div style={{ height: 7, background: '#0a0000', border: '1px solid #180000', marginBottom: 12 }}>
+                    <div style={{ height: 7, background: '#1a0a00', border: '1px solid #2a1000', marginBottom: 12 }}>
                       <div
                         style={{
                           height: '100%',
@@ -223,7 +223,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                       >
                         {isDefeated ? '✓ DERROTADO' : '⚔ EN COMBATE'}
                       </span>
-                      <span className="text-[6px]" style={{ color: '#2a2a3a' }}>
+                      <span className="text-[6px]" style={{ color: '#3d2817' }}>
                         {fmt(domain.totalAccumulatedMins)} maestría
                       </span>
                     </div>
@@ -239,16 +239,16 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
               onClick={() => setIsSummoning(true)}
               className="mt-4 flex items-center justify-center gap-4 cursor-pointer"
               style={{
-                border: '2px dashed #1a1a28',
-                background: '#09090f',
+                border: '2px dashed #3d2817',
+                background: '#0a0504',
                 padding: '20px',
                 transition: 'border-color 0.15s',
               }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#92400e')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = '#1a1a28')}
             >
-              <span style={{ color: '#2a2a3a', fontSize: 18 }}>+</span>
-              <span className="text-[7px]" style={{ color: '#2a2a3a', letterSpacing: '0.12em' }}>
+              <span style={{ color: '#3d2817', fontSize: 18 }}>+</span>
+              <span className="text-[7px]" style={{ color: '#3d2817', letterSpacing: '0.12em' }}>
                 FORJAR NUEVO DOMINIO
               </span>
             </div>

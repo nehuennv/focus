@@ -1,7 +1,8 @@
 {
-  "name": "focus",
+  "name": "focus-souls",
+  "description": "Focus Souls - Un ritual de enfoque gamificado. Transforma tu tiempo de estudio en un juego de rol pixel art donde enfrentas bestias y conquistas dominios.",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
