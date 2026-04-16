@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(powershell -Command ':*)",
+      "Bash(copy \"C:\\\\Programacion\\\\focus\\\\background-room.png\" \"C:\\\\Programacion\\\\focus\\\\public\\\\img\\\\background-room.png\")"
+    ]
+  }
+}
