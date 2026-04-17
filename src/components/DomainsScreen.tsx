@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore, PLAYER_RANKS, BEASTS } from '../store/useStore';
+import { useStore, LEVELS, BEASTS } from '../store/useStore';
 import { SummonModal } from './SummonModal';
 
 interface DomainsScreenProps {
@@ -15,7 +15,7 @@ const fmt = (mins: number) => {
 export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
   const { player, domains } = useStore();
   const [isSummoning, setIsSummoning] = useState(false);
-  const rank = PLAYER_RANKS[player.rankIndex] ?? PLAYER_RANKS[0];
+  const currentLevelData = LEVELS.find(l => l.level === player.level) ?? LEVELS[0];
 
   return (
     <>
@@ -39,29 +39,29 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={onBackToMenu}
-                className="btn-pixel text-[8px] px-3 py-2"
+                className="btn-pixel text-[12px] px-4 py-3"
                 style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
               >
                 ← VOLVER
               </button>
 
               <div className="text-center">
-                <h1 className="text-[9px] md:text-[11px] text-amber-400 tracking-widest drop-shadow-[2px_2px_0_#000]">
+                <h1 className="text-[18px] md:text-[22px] text-amber-400 tracking-widest drop-shadow-[2px_2px_0_#000]">
                   GRIMORIOS DE DOMINIO
                 </h1>
                 <div className="mt-2 flex items-center justify-center gap-3">
-                  <div style={{ height: 1, width: 40, background: '#3d2817' }} />
-                  <span className="text-[7px]" style={{ color: '#8b7355' }}>
-                    {rank.title} · {fmt(player.totalAccumulatedMins)}
+                  <div style={{ height: 2, width: 50, background: '#3d2817' }} />
+                  <span className="text-[11px]" style={{ color: '#8b7355' }}>
+                    {currentLevelData.icon} LV {player.level} · {currentLevelData.title}
                   </span>
-                  <div style={{ height: 1, width: 40, background: '#3d2817' }} />
+                  <div style={{ height: 2, width: 50, background: '#3d2817' }} />
                 </div>
               </div>
 
               {/* Forge button top-right */}
               <button
                 onClick={() => setIsSummoning(true)}
-                className="btn-pixel text-[8px] px-3 py-2"
+                className="btn-pixel text-[12px] px-4 py-3"
                 style={{ borderColor: '#92400e', background: '#1c0a00', color: '#fbbf24' }}
               >
                 + FORJAR
@@ -78,16 +78,16 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
               className="p-12 text-center"
               style={{ border: '2px solid #3d2817', background: '#0a0504' }}
             >
-              <p className="text-[8px] leading-loose mb-2" style={{ color: '#5c4a3d' }}>
+              <p className="text-[12px] leading-loose mb-2" style={{ color: '#5c4a3d' }}>
                 ···
               </p>
-              <p className="text-[8px] leading-loose mb-6" style={{ color: '#8b7355' }}>
+              <p className="text-[12px] leading-loose mb-6" style={{ color: '#8b7355' }}>
                 Ningún dominio ha sido sellado aún.<br />
                 Acude al altar y forja el primero.
               </p>
               <button
                 onClick={() => setIsSummoning(true)}
-                className="btn-pixel text-[8px] px-6 py-3"
+                className="btn-pixel text-[12px] px-8 py-4"
                 style={{ borderColor: '#92400e', background: '#1c0a00', color: '#fbbf24' }}
               >
                 ⚔ FORJAR PRIMER DOMINIO
@@ -151,7 +151,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
 
                     {/* Domain name */}
                     <h2
-                      className="text-[9px] pr-14 mb-1 leading-relaxed"
+                      className="text-[14px] pr-14 mb-1 leading-relaxed"
                       style={{ color: isDefeated ? '#5c4a3d' : '#fbbf24' }}
                     >
                       {domain.name}
@@ -160,7 +160,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     {/* Beast lore */}
                     {beast?.lore && (
                       <p
-                        className="text-[6px] italic pr-14 mb-4 leading-relaxed"
+                        className="text-[10px] italic pr-14 mb-4 leading-relaxed"
                         style={{ color: '#5c4a3d' }}
                       >
                         {beast.lore}
@@ -168,14 +168,14 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     )}
 
                     {/* Divider */}
-                    <div style={{ height: 1, background: '#2a1810', marginBottom: 12 }} />
+                    <div style={{ height: 2, background: '#2a1810', marginBottom: 12 }} />
 
                     {/* Debt label row */}
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-[7px]" style={{ color: '#5c4a3d', letterSpacing: '0.08em' }}>
+                      <span className="text-[10px]" style={{ color: '#5c4a3d', letterSpacing: '0.08em' }}>
                         DEUDA SEMANAL
                       </span>
-                      <span className="text-[7px]" style={{ color: '#3d2817' }}>
+                      <span className="text-[10px]" style={{ color: '#3d2817' }}>
                         /{fmt(domain.weeklyTargetMins)}
                       </span>
                     </div>
@@ -183,14 +183,14 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     {/* Debt value */}
                     <div className="mb-3">
                       {isDefeated ? (
-                        <p className="text-[9px]" style={{ color: '#166534' }}>— SALDADO —</p>
+                        <p className="text-[14px]" style={{ color: '#166534' }}>— SALDADO —</p>
                       ) : (
                         <>
-                          <p className="text-[11px]" style={{ color: isOverdue ? '#dc2626' : '#ef4444' }}>
+                          <p className="text-[16px]" style={{ color: isOverdue ? '#dc2626' : '#ef4444' }}>
                             {fmt(domain.currentDebtMins)}
                           </p>
                           {isOverdue && (
-                            <p className="text-[6px] mt-1" style={{ color: '#7f1d1d', letterSpacing: '0.05em' }}>
+                            <p className="text-[9px] mt-1" style={{ color: '#7f1d1d', letterSpacing: '0.05em' }}>
                               ▲ INTERESES POR INACTIVIDAD
                             </p>
                           )}
@@ -199,7 +199,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     </div>
 
                     {/* HP Bar */}
-                    <div style={{ height: 7, background: '#1a0a00', border: '1px solid #2a1000', marginBottom: 12 }}>
+                    <div style={{ height: 10, background: '#1a0a00', border: '2px solid #2a1000', marginBottom: 12 }}>
                       <div
                         style={{
                           height: '100%',
@@ -213,9 +213,9 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                     {/* Status row */}
                     <div className="flex justify-between items-center">
                       <span
-                        className="text-[6px] px-2 py-1"
+                        className="text-[9px] px-3 py-2"
                         style={{
-                          border: `1px solid ${isDefeated ? '#14532d' : '#7f1d1d'}`,
+                          border: `2px solid ${isDefeated ? '#14532d' : '#7f1d1d'}`,
                           color: isDefeated ? '#16a34a' : '#ef4444',
                           background: isDefeated ? '#071510' : '#0f0000',
                           letterSpacing: '0.05em',
@@ -223,7 +223,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                       >
                         {isDefeated ? '✓ DERROTADO' : '⚔ EN COMBATE'}
                       </span>
-                      <span className="text-[6px]" style={{ color: '#3d2817' }}>
+                      <span className="text-[9px]" style={{ color: '#3d2817' }}>
                         {fmt(domain.totalAccumulatedMins)} maestría
                       </span>
                     </div>
@@ -247,8 +247,8 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#92400e')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = '#1a1a28')}
             >
-              <span style={{ color: '#3d2817', fontSize: 18 }}>+</span>
-              <span className="text-[7px]" style={{ color: '#3d2817', letterSpacing: '0.12em' }}>
+              <span style={{ color: '#3d2817', fontSize: 24 }}>+</span>
+              <span className="text-[11px]" style={{ color: '#3d2817', letterSpacing: '0.12em' }}>
                 FORJAR NUEVO DOMINIO
               </span>
             </div>

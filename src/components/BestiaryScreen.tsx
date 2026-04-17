@@ -26,23 +26,23 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={onBackToMenu}
-              className="btn-pixel text-[8px] px-3 py-2"
+              className="btn-pixel text-[12px] px-4 py-3"
               style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
             >
               ← VOLVER
             </button>
 
             <div className="text-center">
-              <h1 className="text-[9px] md:text-[11px] tracking-widest drop-shadow-[2px_2px_0_#000]"
+              <h1 className="text-[18px] md:text-[22px] tracking-widest drop-shadow-[2px_2px_0_#000]"
                 style={{ color: '#dc2626' }}>
                 CODEX BESTIARUM
               </h1>
               <div className="mt-2 flex items-center justify-center gap-3">
-                <div style={{ height: 1, width: 40, background: '#2a1a1a' }} />
-                <span className="text-[7px]" style={{ color: '#52525b' }}>
+                <div style={{ height: 2, width: 50, background: '#2a1a1a' }} />
+                <span className="text-[11px]" style={{ color: '#52525b' }}>
                   {bestiary.filter(b => b.defeats > 0).length} / {bestiary.length} bestias registradas
                 </span>
-                <div style={{ height: 1, width: 40, background: '#2a1a1a' }} />
+                <div style={{ height: 2, width: 50, background: '#2a1a1a' }} />
               </div>
             </div>
 
@@ -96,7 +96,7 @@ export function BestiaryScreen({ onBackToMenu }: BestiaryScreenProps) {
                     style={{ zIndex: 8 }}
                   >
                     <span
-                      className="text-[7px] tracking-widest"
+                      className="text-[11px] tracking-widest"
                       style={{
                         color: '#3d2817',
                         letterSpacing: '0.3em',

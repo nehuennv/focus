@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useMovement, type Direction } from '../hooks/useMovement';
-import { useStore, BEASTS } from '../store/useStore';
+import { useStore, BEASTS, LEVELS } from '../store/useStore';
 import { RPGDialogue, type DialogueOption } from './RPGDialogue';
 import { Encounter } from './Encounter';
 
@@ -105,11 +105,18 @@ interface RitualData { durationMins: number; domainId: string; beastId: string; 
 interface Hub2DProps {
   onOpenBestiary: () => void;
   onOpenDomains: () => void;
+  onOpenTrophies: () => void;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export function Hub2D({ onOpenBestiary, onOpenDomains }: Hub2DProps) {
-  const { domains } = useStore();
+export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies }: Hub2DProps) {
+  const { domains, player } = useStore();
+  const currentLevelData = LEVELS.find(l => l.level === player.level) ?? LEVELS[0];
+  const nextLevelData     = LEVELS.find(l => l.level === player.level + 1);
+  const isMaxLevel        = player.level >= LEVELS[LEVELS.length - 1].level;
+  const xpIntoLevel       = player.xp - currentLevelData.xpRequired;
+  const xpNeededForLevel  = isMaxLevel ? 1 : (nextLevelData!.xpRequired - currentLevelData.xpRequired);
+  const levelProgress     = isMaxLevel ? 100 : Math.min(100, (xpIntoLevel / xpNeededForLevel) * 100);
 
   // Ritual state
   const [dialogPhase, setDialogPhase] = useState<DialogPhase | null>(null);
@@ -263,9 +270,31 @@ export function Hub2D({ onOpenBestiary, onOpenDomains }: Hub2DProps) {
     >
       {/* ── Top HUD ── */}
       {!isBlocked && (
-        <div className="mb-3 flex gap-6" style={{ color: '#3d2817', fontSize: '7px' }}>
-          <span>WASD · FLECHAS → MOVER</span>
-          <span>ENTER → INTERACTUAR</span>
+        <div className="mb-3 w-full flex items-center justify-between px-2" style={{ maxWidth: COLS * TILE }}>
+          <div className="flex gap-6" style={{ color: '#3d2817', fontSize: '7px' }}>
+            <span>WASD · FLECHAS → MOVER</span>
+            <span>ENTER → INTERACTUAR</span>
+          </div>
+          {/* Level / XP indicator */}
+          <button
+            onClick={onOpenTrophies}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              border: '2px solid #2d1b69', background: '#07000a',
+              padding: '5px 10px', cursor: 'pointer', boxShadow: '2px 2px 0 #000',
+            }}
+          >
+            <span style={{ fontSize: 12 }}>{currentLevelData.icon}</span>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '7px', color: '#c084fc', fontFamily: '"Press Start 2P", monospace', marginBottom: 2 }}>
+                LV {player.level} · {player.xp.toLocaleString()} XP
+              </div>
+              {/* Mini XP bar */}
+              <div style={{ width: 80, height: 4, background: '#07000f', border: '1px solid #2d1b69', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${levelProgress}%`, background: '#7c3aed' }} />
+              </div>
+            </div>
+          </button>
         </div>
       )}
 

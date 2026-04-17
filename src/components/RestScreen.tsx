@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface RestScreenProps {
   onFinish: () => void;
@@ -9,13 +9,17 @@ const fmt = (s: number) =>
 
 export function RestScreen({ onFinish }: RestScreenProps) {
   const [timeLeft, setTimeLeft] = useState(300);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playBonefireSound = () => {
+    const audio = new Audio(`${import.meta.env.BASE_URL}sounds/bonefire.mp3`);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  };
 
   useEffect(() => {
-    audioRef.current = new Audio('sounds/bonefire.mp3');
-    audioRef.current.loop = true;
-    audioRef.current.play().catch(() => {});
-    return () => { audioRef.current?.pause(); audioRef.current = null; };
+    playBonefireSound();
+
+    return () => {};
   }, []);
 
   useEffect(() => {
@@ -23,7 +27,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(iv);
-          new Audio('sounds/bell.mp3').play().catch(() => {});
+          new Audio(`${import.meta.env.BASE_URL}sounds/bell.mp3`).play().catch(() => {});
           onFinish();
           return 0;
         }
@@ -81,7 +85,7 @@ export function RestScreen({ onFinish }: RestScreenProps) {
       {/* Bonefire GIF */}
       <div className="mb-10">
         <img
-          src="img/bonefire.gif"
+          src={`${import.meta.env.BASE_URL}img/bonefire.gif`}
           alt="Fogata"
           style={{
             width: 180,
@@ -106,7 +110,10 @@ export function RestScreen({ onFinish }: RestScreenProps) {
       {/* Buttons */}
       <div className="flex gap-4">
         <button
-          onClick={() => setTimeLeft(prev => prev + 300)}
+          onClick={() => {
+            setTimeLeft(prev => prev + 300);
+            playBonefireSound();
+          }}
           className="btn-pixel text-[8px] px-5 py-3"
           style={{ borderColor: '#14532d', background: '#05150a', color: '#4ade80' }}
         >
