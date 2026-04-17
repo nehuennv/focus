@@ -6,7 +6,11 @@
       "Bash(python3 -c ':*)",
       "Bash(powershell -Command ':*)",
       "Bash(copy \"C:\\\\Programacion\\\\focus\\\\background-room.png\" \"C:\\\\Programacion\\\\focus\\\\public\\\\img\\\\background-room.png\")",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(git add:*)",
+      "Bash(git diff *)",
+      "Read(//tmp/**)",
+      "Bash(npx vite *)"
     ]
   }
 }

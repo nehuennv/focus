@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore, LEVELS, BEASTS } from '../store/useStore';
+import { useStore, BEASTS, getRankDisplay } from '../store/useStore';
 import { SummonModal } from './SummonModal';
 
 interface DomainsScreenProps {
@@ -15,7 +15,7 @@ const fmt = (mins: number) => {
 export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
   const { player, domains } = useStore();
   const [isSummoning, setIsSummoning] = useState(false);
-  const currentLevelData = LEVELS.find(l => l.level === player.level) ?? LEVELS[0];
+  const rd = getRankDisplay(player.rankIndex);
 
   return (
     <>
@@ -52,7 +52,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                 <div className="mt-2 flex items-center justify-center gap-3">
                   <div style={{ height: 2, width: 50, background: '#3d2817' }} />
                   <span className="text-[11px]" style={{ color: '#8b7355' }}>
-                    {currentLevelData.icon} LV {player.level} · {currentLevelData.title}
+                    {rd.era.icon} {rd.fullTitle.toUpperCase()}
                   </span>
                   <div style={{ height: 2, width: 50, background: '#3d2817' }} />
                 </div>

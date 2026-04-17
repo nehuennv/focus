@@ -22,41 +22,7 @@ export interface BestiaryEntry {
   totalMinsDefeated: number;
 }
 
-// ─── Level System ─────────────────────────────────────────────────────────────
-
-export const LEVELS = [
-  { level: 1,  xpRequired: 0,      title: 'Aprendiz',        icon: '🕯️' },
-  { level: 2,  xpRequired: 500,    title: 'Escudero',        icon: '🗡️' },
-  { level: 3,  xpRequired: 1200,   title: 'Guerrero',        icon: '⚔️' },
-  { level: 4,  xpRequired: 2200,   title: 'Veterano',        icon: '🛡️' },
-  { level: 5,  xpRequired: 3500,   title: 'Campeón',         icon: '🏅' },
-  { level: 6,  xpRequired: 5100,   title: 'Héroe',           icon: '⭐' },
-  { level: 7,  xpRequired: 7000,   title: 'Señor de Guerra', icon: '⚡' },
-  { level: 8,  xpRequired: 9200,   title: 'Guardián',        icon: '🔱' },
-  { level: 9,  xpRequired: 11700,  title: 'Arconte',         icon: '🌟' },
-  { level: 10, xpRequired: 14500,  title: 'Leyenda',         icon: '💎' },
-  { level: 11, xpRequired: 17600,  title: 'Ascendido',       icon: '✨' },
-  { level: 12, xpRequired: 21000,  title: 'Maestro Arcano',  icon: '🔮' },
-  { level: 13, xpRequired: 24700,  title: 'El Liche',        icon: '💀' },
-  { level: 14, xpRequired: 28700,  title: 'Señor Oscuro',    icon: '🌑' },
-  { level: 15, xpRequired: 33000,  title: 'Archimago',       icon: '🧙' },
-  { level: 16, xpRequired: 37600,  title: 'Semidiós',        icon: '🌊' },
-  { level: 17, xpRequired: 42500,  title: 'Avatar',          icon: '🌌' },
-  { level: 18, xpRequired: 47700,  title: 'Inmortal',        icon: '♾️' },
-  { level: 19, xpRequired: 53200,  title: 'Primordial',      icon: '🌠' },
-  { level: 20, xpRequired: 59000,  title: 'Dios del Ritual', icon: '👑' },
-];
-
-const calculateLevel = (xp: number): number => {
-  let level = 1;
-  for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= LEVELS[i].xpRequired) {
-      level = LEVELS[i].level;
-      break;
-    }
-  }
-  return level;
-};
+// ─── XP Score (vanity metric — no longer drives progression) ──────────────────
 
 export const calculateXpGain = (mins: number, bossDefeated: boolean): number => {
   let xp = mins * 10;
@@ -67,10 +33,132 @@ export const calculateXpGain = (mins: number, bossDefeated: boolean): number => 
   return xp;
 };
 
+// ─── Progression System: La Jerarquía del Rito ────────────────────────────────
+// 10 Eras × 10 Rangos = 100 rangos totales, basados en minutos totales de foco.
+//
+// Referencia de tiempo (usuario dedicado 3h/día):
+//   Era I   Novicio      0–500 min       (~3 días)
+//   Era II  Iniciado     500–1500 min    (~1 semana)
+//   Era III Guerrero     1500–4000 min   (~3 semanas)
+//   Era IV  Cazador      4000–9000 min   (~2 meses)
+//   Era V   Paladín      9000–20000 min  (~4 meses)
+//   Era VI  Conjurador   20000–40000 min (~8 meses)
+//   Era VII Señor de Guerra  40000–80000 min  (~1 año)
+//   Era VIII Archimago   80000–140000 min (~1.5 años)
+//   Era IX  Leyenda      140000–220000 min (~2.5 años)
+//   Era X   Inmortal     220000+ min     (endgame absoluto)
+
+export const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'] as const;
+
+export interface EraConfig {
+  index: number;
+  name: string;
+  icon: string;
+  color: string;
+  border: string;
+  bg: string;
+  glow: string;
+  startMins: number;
+  minsPerRank: number;
+}
+
+export const ERAS: EraConfig[] = [
+  {
+    index: 0, name: 'Novicio',        icon: '📜',
+    color: '#9ca3af', border: '#374151', bg: '#060608', glow: 'rgba(156,163,175,0.15)',
+    startMins: 0,      minsPerRank: 50,
+  },
+  {
+    index: 1, name: 'Iniciado',       icon: '🕯️',
+    color: '#d1d5db', border: '#6b7280', bg: '#080808', glow: 'rgba(209,213,219,0.15)',
+    startMins: 500,    minsPerRank: 100,
+  },
+  {
+    index: 2, name: 'Guerrero',       icon: '⚔️',
+    color: '#4ade80', border: '#14532d', bg: '#000f05', glow: 'rgba(74,222,128,0.15)',
+    startMins: 1500,   minsPerRank: 250,
+  },
+  {
+    index: 3, name: 'Cazador',        icon: '🏹',
+    color: '#60a5fa', border: '#1e3a5f', bg: '#00050f', glow: 'rgba(96,165,250,0.15)',
+    startMins: 4000,   minsPerRank: 500,
+  },
+  {
+    index: 4, name: 'Paladín',        icon: '🛡️',
+    color: '#fbbf24', border: '#92400e', bg: '#0f0800', glow: 'rgba(251,191,36,0.15)',
+    startMins: 9000,   minsPerRank: 1100,
+  },
+  {
+    index: 5, name: 'Conjurador',     icon: '🔮',
+    color: '#c084fc', border: '#581c87', bg: '#0a000f', glow: 'rgba(192,132,252,0.15)',
+    startMins: 20000,  minsPerRank: 2000,
+  },
+  {
+    index: 6, name: 'Señor de Guerra', icon: '⚡',
+    color: '#f87171', border: '#7f1d1d', bg: '#0f0000', glow: 'rgba(248,113,113,0.15)',
+    startMins: 40000,  minsPerRank: 4000,
+  },
+  {
+    index: 7, name: 'Archimago',      icon: '🧙',
+    color: '#a78bfa', border: '#4c1d95', bg: '#050010', glow: 'rgba(167,139,250,0.2)',
+    startMins: 80000,  minsPerRank: 6000,
+  },
+  {
+    index: 8, name: 'Leyenda',        icon: '👑',
+    color: '#fde047', border: '#854d0e', bg: '#0f0800', glow: 'rgba(253,224,71,0.2)',
+    startMins: 140000, minsPerRank: 8000,
+  },
+  {
+    index: 9, name: 'Inmortal',       icon: '💀',
+    color: '#f8fafc', border: '#4a4a5a', bg: '#060610', glow: 'rgba(248,250,252,0.25)',
+    startMins: 220000, minsPerRank: 13000,
+  },
+];
+
+export const calculateRankIndex = (totalMins: number): number => {
+  for (let i = ERAS.length - 1; i >= 0; i--) {
+    const era = ERAS[i];
+    if (totalMins >= era.startMins) {
+      const rank = Math.min(
+        Math.floor((totalMins - era.startMins) / era.minsPerRank),
+        9,
+      );
+      return i * 10 + rank;
+    }
+  }
+  return 0;
+};
+
+export const getRankProgress = (totalMins: number) => {
+  const rankIndex  = calculateRankIndex(totalMins);
+  const eraIdx     = Math.floor(rankIndex / 10);
+  const rankInEra  = rankIndex % 10;
+  const era        = ERAS[Math.min(eraIdx, ERAS.length - 1)];
+  const rankStart  = era.startMins + rankInEra * era.minsPerRank;
+  const rankEnd    = rankStart + era.minsPerRank;
+  const isAbsMax   = rankIndex === 99 && totalMins >= rankEnd;
+  const progress   = isAbsMax ? 100 : Math.min(100, ((totalMins - rankStart) / era.minsPerRank) * 100);
+  return { rankIndex, eraIdx, rankInEra: rankInEra + 1, era, rankStart, rankEnd, progress, isAbsMax };
+};
+
+export const getRankDisplay = (rankIndex: number) => {
+  const eraIdx    = Math.floor(rankIndex / 10);
+  const rankInEra = rankIndex % 10;
+  const era       = ERAS[Math.min(eraIdx, ERAS.length - 1)];
+  return {
+    era,
+    rankInEra: rankInEra + 1,
+    roman: ROMAN[rankInEra],
+    fullTitle: `${era.name} ${ROMAN[rankInEra]}`,
+  };
+};
+
+// ─── Player ───────────────────────────────────────────────────────────────────
+
 export interface Player {
   totalAccumulatedMins: number;
   xp: number;
-  level: number;
+  rankIndex: number;
   unlockedAchievements: string[];
   lastSessionXp: number;
   lastSessionBossDefeated: boolean;
@@ -91,10 +179,12 @@ export interface FocusStore {
   bestiary: BestiaryEntry[];
   ritualSessions: RitualSession[];
   lastSyncDate: number;
+  tutorialSeen: boolean;
 
   createDomain: (name: string, weeklyTargetMins: number, beastId: string) => void;
   completeRitual: (domainId: string, beastId: string, mins: number) => void;
   checkAndApplyWeeklyDebt: () => void;
+  setTutorialSeen: (seen: boolean) => void;
 }
 
 // ─── Achievement Definitions ──────────────────────────────────────────────────
@@ -104,7 +194,7 @@ export interface AchievementDef {
   title: string;
   desc: string;
   icon: string;
-  category: 'tiempo' | 'bestias' | 'dominios' | 'sesiones' | 'nivel';
+  category: 'tiempo' | 'bestias' | 'dominios' | 'sesiones' | 'progresion';
   color: string;
   border: string;
   bg: string;
@@ -132,7 +222,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'centurion',
     title: 'El Centurión',
-    desc: '100 minutos de maestría total',
+    desc: '100 minutos de enfoque total',
     icon: '💯',
     category: 'tiempo',
     color: '#fbbf24', border: '#92400e', bg: '#0f0800',
@@ -150,7 +240,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'decano',
     title: 'El Decano',
-    desc: '10 horas de maestría acumulada',
+    desc: '10 horas de enfoque acumuladas',
     icon: '⏳',
     category: 'tiempo',
     color: '#22d3ee', border: '#164e63', bg: '#000f15',
@@ -159,7 +249,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'veterano_oscuro',
     title: 'Veterano Oscuro',
-    desc: '50 horas de maestría acumulada',
+    desc: '50 horas de enfoque acumuladas',
     icon: '⚔️',
     category: 'tiempo',
     color: '#a78bfa', border: '#4c1d95', bg: '#0a000f',
@@ -168,11 +258,20 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'leyenda_eterna',
     title: 'Leyenda Eterna',
-    desc: '100 horas de maestría acumulada',
+    desc: '100 horas de enfoque acumuladas',
     icon: '👑',
     category: 'tiempo',
     color: '#fde047', border: '#854d0e', bg: '#0f0800',
     check: ({ player }) => player.totalAccumulatedMins >= 6000,
+  },
+  {
+    id: 'mil_horas',
+    title: 'Las Mil Horas',
+    desc: '1000 horas de enfoque acumuladas',
+    icon: '🌌',
+    category: 'tiempo',
+    color: '#f8fafc', border: '#4a4a5a', bg: '#060610',
+    check: ({ player }) => player.totalAccumulatedMins >= 60000,
   },
   // ── Bestias ───────────────────────────────────────────────────────────────
   {
@@ -312,33 +411,87 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     color: '#818cf8', border: '#312e81', bg: '#05000f',
     check: ({ ritualSessions }) => ritualSessions.length >= 50,
   },
-  // ── Nivel ─────────────────────────────────────────────────────────────────
   {
-    id: 'iniciado',
-    title: 'El Iniciado',
-    desc: 'Alcanzar el nivel 5',
-    icon: '🌱',
-    category: 'nivel',
-    color: '#86efac', border: '#166534', bg: '#000f05',
-    check: ({ player }) => player.level >= 5,
+    id: 'obsesionado',
+    title: 'El Obsesionado',
+    desc: '200 rituales completados',
+    icon: '🔁',
+    category: 'sesiones',
+    color: '#f472b6', border: '#831843', bg: '#0f0008',
+    check: ({ ritualSessions }) => ritualSessions.length >= 200,
+  },
+  // ── Progresión ────────────────────────────────────────────────────────────
+  {
+    id: 'primera_ascension',
+    title: 'Primera Ascensión',
+    desc: 'Alcanzar la Era II — Iniciado',
+    icon: '🕯️',
+    category: 'progresion',
+    color: '#d1d5db', border: '#6b7280', bg: '#080808',
+    check: ({ player }) => player.rankIndex >= 10,
   },
   {
-    id: 'ascendido',
-    title: 'El Ascendido',
-    desc: 'Alcanzar el nivel 10',
+    id: 'forja_de_guerra',
+    title: 'Forja de Guerra',
+    desc: 'Alcanzar la Era III — Guerrero',
+    icon: '⚔️',
+    category: 'progresion',
+    color: '#4ade80', border: '#14532d', bg: '#000f05',
+    check: ({ player }) => player.rankIndex >= 20,
+  },
+  {
+    id: 'paladinato',
+    title: 'El Paladinato',
+    desc: 'Alcanzar la Era V — Paladín (~150h)',
+    icon: '🛡️',
+    category: 'progresion',
+    color: '#fbbf24', border: '#92400e', bg: '#0f0800',
+    check: ({ player }) => player.rankIndex >= 40,
+  },
+  {
+    id: 'arte_oscuro',
+    title: 'Arte Oscuro',
+    desc: 'Alcanzar la Era VI — Conjurador (~333h)',
+    icon: '🔮',
+    category: 'progresion',
+    color: '#c084fc', border: '#581c87', bg: '#0a000f',
+    check: ({ player }) => player.rankIndex >= 50,
+  },
+  {
+    id: 'señor_de_la_guerra',
+    title: 'Señor de la Guerra',
+    desc: 'Alcanzar la Era VII (~667h)',
     icon: '⚡',
-    category: 'nivel',
-    color: '#fcd34d', border: '#92400e', bg: '#0f0800',
-    check: ({ player }) => player.level >= 10,
+    category: 'progresion',
+    color: '#f87171', border: '#7f1d1d', bg: '#0f0000',
+    check: ({ player }) => player.rankIndex >= 60,
   },
   {
-    id: 'dios_ritual',
-    title: 'Dios del Ritual',
-    desc: 'Alcanzar el nivel 20',
+    id: 'archimago_supremo',
+    title: 'Archimago Supremo',
+    desc: 'Alcanzar la Era VIII (~1333h)',
+    icon: '🧙',
+    category: 'progresion',
+    color: '#a78bfa', border: '#4c1d95', bg: '#050010',
+    check: ({ player }) => player.rankIndex >= 70,
+  },
+  {
+    id: 'la_leyenda',
+    title: 'La Leyenda',
+    desc: 'Alcanzar la Era IX (~2333h)',
     icon: '👑',
-    category: 'nivel',
+    category: 'progresion',
     color: '#fde047', border: '#854d0e', bg: '#0f0800',
-    check: ({ player }) => player.level >= 20,
+    check: ({ player }) => player.rankIndex >= 80,
+  },
+  {
+    id: 'el_inmortal',
+    title: 'El Inmortal',
+    desc: 'Alcanzar la Era X — el rango más alto (~3667h)',
+    icon: '💀',
+    category: 'progresion',
+    color: '#f8fafc', border: '#4a4a5a', bg: '#060610',
+    check: ({ player }) => player.rankIndex >= 90,
   },
 ];
 
@@ -390,7 +543,7 @@ const getWeeksPassed = (lastSyncDate: number): number => {
 const INITIAL_PLAYER: Player = {
   totalAccumulatedMins: 0,
   xp: 0,
-  level: 1,
+  rankIndex: 0,
   unlockedAchievements: [],
   lastSessionXp: 0,
   lastSessionBossDefeated: false,
@@ -399,7 +552,7 @@ const INITIAL_PLAYER: Player = {
 
 export const useStore = create<FocusStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       player: INITIAL_PLAYER,
       domains: [],
       bestiary: [
@@ -417,6 +570,9 @@ export const useStore = create<FocusStore>()(
       ],
       ritualSessions: [],
       lastSyncDate: Date.now(),
+      tutorialSeen: false,
+
+      setTutorialSeen: (seen) => set({ tutorialSeen: seen }),
 
       createDomain: (name, weeklyTargetMins, beastId) => {
         const beast = BEASTS[beastId as keyof typeof BEASTS];
@@ -436,7 +592,6 @@ export const useStore = create<FocusStore>()(
             },
           ];
 
-          // Check domain-creation achievements
           const newAchievements = checkNewAchievements(state.player, newDomains, state.bestiary, state.ritualSessions, 0, false);
           return {
             domains: newDomains,
@@ -453,10 +608,10 @@ export const useStore = create<FocusStore>()(
           const domain = state.domains.find((d) => d.id === domainId);
           if (!domain) return state;
 
-          const newDebtMins = Math.max(0, domain.currentDebtMins - mins);
-          const wasDefeated = domain.isDefeated;
-          const isNowDefeated = newDebtMins <= 0;
-          const bossDefeated = isNowDefeated && !wasDefeated;
+          const newDebtMins    = Math.max(0, domain.currentDebtMins - mins);
+          const wasDefeated    = domain.isDefeated;
+          const isNowDefeated  = newDebtMins <= 0;
+          const bossDefeated   = isNowDefeated && !wasDefeated;
 
           const updatedBestiary = state.bestiary.map((entry) =>
             entry.beastId === beastId
@@ -475,9 +630,9 @@ export const useStore = create<FocusStore>()(
           );
 
           const newTotalAccumulatedMins = state.player.totalAccumulatedMins + mins;
-          const xpGained = calculateXpGain(mins, bossDefeated);
-          const newXp = state.player.xp + xpGained;
-          const newLevel = calculateLevel(newXp);
+          const xpGained  = calculateXpGain(mins, bossDefeated);
+          const newXp     = state.player.xp + xpGained;
+          const newRank   = calculateRankIndex(newTotalAccumulatedMins);
 
           const updatedSessions = [
             ...state.ritualSessions,
@@ -487,7 +642,7 @@ export const useStore = create<FocusStore>()(
           const updatedPlayer: Player = {
             totalAccumulatedMins: newTotalAccumulatedMins,
             xp: newXp,
-            level: newLevel,
+            rankIndex: newRank,
             unlockedAchievements: state.player.unlockedAchievements,
             lastSessionXp: xpGained,
             lastSessionBossDefeated: bossDefeated,
@@ -521,25 +676,27 @@ export const useStore = create<FocusStore>()(
           };
         });
       },
-
     }),
     {
       name: 'focus-souls-storage',
-      version: 2,
+      version: 4,
       migrate: (persistedState: unknown, version: number) => {
         const s = persistedState as Record<string, unknown>;
-        if (version < 2) {
-          const player = (s.player as Partial<Player & { rankIndex?: number }>) || {};
+        // For any previous version, recalculate rankIndex and mark tutorial as seen
+        // (existing users already know how to use the app)
+        if (version < 4) {
+          const player = (s.player as Partial<Player & { level?: number }>) || {};
           const totalMins = player.totalAccumulatedMins || 0;
           const xp = player.xp || totalMins * 10;
-          const { rankIndex: _r, ...playerRest } = player;
+          const { level: _l, ...playerRest } = player as { level?: number } & Partial<Player>;
           return {
             ...s,
+            tutorialSeen: true,
             player: {
               ...INITIAL_PLAYER,
               ...playerRest,
               xp,
-              level: calculateLevel(xp),
+              rankIndex: calculateRankIndex(totalMins),
               unlockedAchievements: playerRest.unlockedAchievements || [],
               lastSessionXp: playerRest.lastSessionXp || 0,
               lastSessionBossDefeated: playerRest.lastSessionBossDefeated || false,
@@ -553,7 +710,7 @@ export const useStore = create<FocusStore>()(
   )
 );
 
-// ─── Achievement checker (outside store to avoid circular ref) ─────────────────
+// ─── Achievement checker ──────────────────────────────────────────────────────
 
 function checkNewAchievements(
   player: Player,

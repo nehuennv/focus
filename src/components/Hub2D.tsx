@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useMovement, type Direction } from '../hooks/useMovement';
-import { useStore, BEASTS, LEVELS } from '../store/useStore';
+import { useStore, BEASTS, ERAS, getRankProgress } from '../store/useStore';
 import { RPGDialogue, type DialogueOption } from './RPGDialogue';
 import { Encounter } from './Encounter';
 
@@ -106,17 +106,16 @@ interface Hub2DProps {
   onOpenBestiary: () => void;
   onOpenDomains: () => void;
   onOpenTrophies: () => void;
+  onOpenTutorial: () => void;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies }: Hub2DProps) {
+export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTutorial }: Hub2DProps) {
   const { domains, player } = useStore();
-  const currentLevelData = LEVELS.find(l => l.level === player.level) ?? LEVELS[0];
-  const nextLevelData     = LEVELS.find(l => l.level === player.level + 1);
-  const isMaxLevel        = player.level >= LEVELS[LEVELS.length - 1].level;
-  const xpIntoLevel       = player.xp - currentLevelData.xpRequired;
-  const xpNeededForLevel  = isMaxLevel ? 1 : (nextLevelData!.xpRequired - currentLevelData.xpRequired);
-  const levelProgress     = isMaxLevel ? 100 : Math.min(100, (xpIntoLevel / xpNeededForLevel) * 100);
+  const rp      = getRankProgress(player.totalAccumulatedMins);
+  const eraIdx  = Math.floor(player.rankIndex / 10);
+  const era     = ERAS[Math.min(eraIdx, ERAS.length - 1)];
+  const roman   = ['I','II','III','IV','V','VI','VII','VIII','IX','X'][player.rankIndex % 10];
 
   // Ritual state
   const [dialogPhase, setDialogPhase] = useState<DialogPhase | null>(null);
@@ -275,26 +274,38 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies }: Hub2DPr
             <span>WASD · FLECHAS → MOVER</span>
             <span>ENTER → INTERACTUAR</span>
           </div>
-          {/* Level / XP indicator */}
-          <button
-            onClick={onOpenTrophies}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              border: '2px solid #2d1b69', background: '#07000a',
-              padding: '5px 10px', cursor: 'pointer', boxShadow: '2px 2px 0 #000',
-            }}
-          >
-            <span style={{ fontSize: 12 }}>{currentLevelData.icon}</span>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: '7px', color: '#c084fc', fontFamily: '"Press Start 2P", monospace', marginBottom: 2 }}>
-                LV {player.level} · {player.xp.toLocaleString()} XP
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {/* Tutorial button */}
+            <button
+              onClick={onOpenTutorial}
+              title="Ayuda / Tutorial"
+              style={{
+                border: `1px solid #3d2817`, background: '#0a0504',
+                color: '#5c4a3d', fontSize: '9px', width: 24, height: 24,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '2px 2px 0 #000', fontFamily: '"Press Start 2P", monospace',
+              }}
+            >?</button>
+            {/* Rank indicator */}
+            <button
+              onClick={onOpenTrophies}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                border: `2px solid ${era.border}`, background: era.bg,
+                padding: '5px 10px', cursor: 'pointer', boxShadow: '2px 2px 0 #000',
+              }}
+            >
+              <span style={{ fontSize: 12 }}>{era.icon}</span>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '7px', color: era.color, fontFamily: '"Press Start 2P", monospace', marginBottom: 2 }}>
+                  {era.name.toUpperCase()} {roman}
+                </div>
+                <div style={{ width: 80, height: 4, background: '#07000f', border: `1px solid ${era.border}`, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${rp.progress}%`, background: era.color }} />
+                </div>
               </div>
-              {/* Mini XP bar */}
-              <div style={{ width: 80, height: 4, background: '#07000f', border: '1px solid #2d1b69', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${levelProgress}%`, background: '#7c3aed' }} />
-              </div>
-            </div>
-          </button>
+            </button>
+          </div>
         </div>
       )}
 
@@ -310,7 +321,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies }: Hub2DPr
       >
         {/* Layer 0 — Room background */}
         <img
-          src="img/background-room.png"
+          src="img/room.png"
           alt=""
           draggable={false}
           style={{

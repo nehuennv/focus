@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useStore, LEVELS, ACHIEVEMENTS } from '../store/useStore';
+import { useStore, ERAS, ROMAN, ACHIEVEMENTS, getRankProgress } from '../store/useStore';
 
 interface TrophiesScreenProps {
   onBackToMenu: () => void;
+  onOpenTutorial: () => void;
 }
 
 const fmt = (mins: number) => {
@@ -12,24 +13,23 @@ const fmt = (mins: number) => {
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  tiempo:   '⏱  TIEMPO',
-  bestias:  '☠  BESTIAS',
-  dominios: '📜  DOMINIOS',
-  sesiones: '⚔  SESIONES',
-  nivel:    '⭐  NIVEL',
+  tiempo:     '⏱  TIEMPO',
+  bestias:    '☠  BESTIAS',
+  dominios:   '📜  DOMINIOS',
+  sesiones:   '⚔  SESIONES',
+  progresion: '🔮  PROGRESIÓN',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  tiempo:   '#fbbf24',
-  bestias:  '#dc2626',
-  dominios: '#4ade80',
-  sesiones: '#60a5fa',
-  nivel:    '#c084fc',
+  tiempo:     '#fbbf24',
+  bestias:    '#dc2626',
+  dominios:   '#4ade80',
+  sesiones:   '#60a5fa',
+  progresion: '#c084fc',
 };
 
-type Tab = 'niveles' | 'logros';
+type Tab = 'progresion' | 'logros';
 
-// ── Shared style helpers ───────────────────────────────────────────────────────
 const S = {
   label:   { fontSize: 10, letterSpacing: '0.15em' } as React.CSSProperties,
   body:    { fontSize: 12, lineHeight: 1.8 }          as React.CSSProperties,
@@ -38,19 +38,21 @@ const S = {
   hero:    { fontSize: 28 }                            as React.CSSProperties,
 };
 
-export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
+export function TrophiesScreen({ onBackToMenu, onOpenTutorial }: TrophiesScreenProps) {
   const { player, ritualSessions } = useStore();
-  const [tab, setTab] = useState<Tab>('niveles');
+  const [tab, setTab] = useState<Tab>('progresion');
 
+  const rp          = getRankProgress(player.totalAccumulatedMins);
+  const era         = rp.era;
+  const roman       = ROMAN[rp.rankInEra - 1];
   const totalMins   = player.totalAccumulatedMins;
   const totalHours  = Math.floor(totalMins / 60);
 
-  const currentLevelData  = LEVELS.find(l => l.level === player.level) ?? LEVELS[0];
-  const nextLevelData      = LEVELS.find(l => l.level === player.level + 1);
-  const isMaxLevel         = player.level >= LEVELS[LEVELS.length - 1].level;
-  const xpIntoLevel        = player.xp - currentLevelData.xpRequired;
-  const xpNeededForLevel   = isMaxLevel ? 1 : (nextLevelData!.xpRequired - currentLevelData.xpRequired);
-  const levelProgress      = isMaxLevel ? 100 : Math.min(100, (xpIntoLevel / xpNeededForLevel) * 100);
+  // Next rank info
+  const nextRankInEra  = rp.rankInEra < 10 ? rp.rankInEra + 1 : null;
+  const nextEra        = rp.eraIdx < ERAS.length - 1 ? ERAS[rp.eraIdx + 1] : null;
+  const minsToNextRank = rp.rankEnd - totalMins;
+  const minsToNextEra  = nextEra ? nextEra.startMins - totalMins : null;
 
   const unlockedSet            = new Set(player.unlockedAchievements);
   const achievementsByCategory = ACHIEVEMENTS.reduce<Record<string, typeof ACHIEVEMENTS>>((acc, a) => {
@@ -63,12 +65,12 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
     border: `2px solid ${active ? '#92400e' : '#3d2817'}`,
     background: active ? '#1c0800' : '#0a0504',
     color: active ? '#fbbf24' : '#5c4a3d',
-    fontSize: 11,
-    padding: '10px 20px',
+    fontSize: 10,
+    padding: '10px 18px',
     fontFamily: '"Press Start 2P", monospace',
     cursor: 'pointer',
     boxShadow: active ? '3px 3px 0 #000' : '2px 2px 0 #000',
-    letterSpacing: '0.08em',
+    letterSpacing: '0.06em',
   });
 
   return (
@@ -97,7 +99,13 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
             <h1 style={{ ...S.heading, fontSize: 16, color: '#fbbf24', textShadow: '3px 3px 0 #000', letterSpacing: '0.15em' }}>
               SALÓN DE LA FAMA
             </h1>
-            <div style={{ width: 100 }} />
+            <button
+              onClick={onOpenTutorial}
+              title="Ayuda y tutorial"
+              style={{ border: '2px solid #3d2817', background: '#0f0804', color: '#8b7355', fontSize: 11, padding: '10px 14px', fontFamily: '"Press Start 2P", monospace', cursor: 'pointer', boxShadow: '3px 3px 0 #000' }}
+            >
+              ? AYUDA
+            </button>
           </div>
           <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #2a2218 20%, #2a2218 80%, transparent)' }} />
         </header>
@@ -105,76 +113,94 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
         {/* ── STATS ROW ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {[
-            { label: 'NIVEL',    value: `LV ${player.level}`,                      color: '#c084fc', border: '#581c87' },
-            { label: 'XP TOTAL', value: player.xp.toLocaleString(),                color: '#fbbf24', border: '#92400e' },
-            { label: 'RITUALES', value: ritualSessions.length,                      color: '#60a5fa', border: '#1e3a5f' },
-            { label: 'LOGROS',   value: `${unlockedCount}/${ACHIEVEMENTS.length}`, color: '#4ade80', border: '#14532d' },
+            { label: 'RANGO',    value: `${era.name.slice(0,8).toUpperCase()} ${roman}`, color: era.color, border: era.border },
+            { label: 'PUNTUACIÓN', value: player.xp.toLocaleString() + ' pts',          color: '#fbbf24', border: '#92400e' },
+            { label: 'RITUALES', value: ritualSessions.length,                           color: '#60a5fa', border: '#1e3a5f' },
+            { label: 'LOGROS',   value: `${unlockedCount}/${ACHIEVEMENTS.length}`,       color: '#4ade80', border: '#14532d' },
           ].map(({ label, value, color, border }) => (
             <div key={label} className="p-4 text-center" style={{ border: `2px solid ${border}`, background: '#0a0504', boxShadow: '3px 3px 0 #000' }}>
-              <p style={{ ...S.label, color: '#5c4a3d', marginBottom: 12 }}>{label}</p>
-              <p style={{ ...S.big, color, textShadow: '2px 2px 0 #000' }}>{value}</p>
+              <p style={{ ...S.label, color: '#5c4a3d', marginBottom: 12, fontSize: 9 }}>{label}</p>
+              <p style={{ fontSize: 14, color, textShadow: '2px 2px 0 #000', lineHeight: 1.3 }}>{value}</p>
             </div>
           ))}
         </div>
 
         {/* ── TABS ───────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-7">
-          <button style={TAB_BTN(tab === 'niveles')} onClick={() => setTab('niveles')}>NIVELES</button>
-          <button style={TAB_BTN(tab === 'logros')}  onClick={() => setTab('logros')}>LOGROS</button>
+          <button style={TAB_BTN(tab === 'progresion')} onClick={() => setTab('progresion')}>PROGRESIÓN</button>
+          <button style={TAB_BTN(tab === 'logros')}     onClick={() => setTab('logros')}>LOGROS</button>
         </div>
 
-        {/* ══ TAB: NIVELES ═════════════════════════════════════════════ */}
-        {tab === 'niveles' && (
+        {/* ══ TAB: PROGRESIÓN ══════════════════════════════════════════ */}
+        {tab === 'progresion' && (
           <div>
-            {/* Level hero card */}
-            <div className="mb-6 p-8 text-center relative overflow-hidden" style={{ border: '3px solid #581c87', background: '#0a000f', boxShadow: '4px 4px 0 #000, 0 0 28px rgba(192,132,252,0.15)' }}>
-              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(192,132,252,0.06) 0%, transparent 70%)' }} />
+            {/* Era hero card */}
+            <div
+              className="mb-6 p-8 text-center relative overflow-hidden"
+              style={{
+                border: `3px solid ${era.border}`,
+                background: era.bg,
+                boxShadow: `4px 4px 0 #000, 0 0 32px ${era.glow}`,
+              }}
+            >
+              <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at center, ${era.glow} 0%, transparent 70%)` }} />
               <div className="relative z-10">
-                <p style={{ ...S.label, color: '#7c3aed', marginBottom: 16 }}>⸺  NIVEL ACTUAL  ⸺</p>
-                <div style={{ fontSize: 56, lineHeight: 1, marginBottom: 8, animation: 'ember-pulse 3s ease-in-out infinite' }}>
-                  {currentLevelData.icon}
+                <p style={{ ...S.label, color: era.border, marginBottom: 16 }}>⸺  RANGO ACTUAL  ⸺</p>
+                <div style={{ fontSize: 60, lineHeight: 1, marginBottom: 8, animation: 'ember-pulse 3s ease-in-out infinite' }}>
+                  {era.icon}
                 </div>
-                <div style={{ ...S.hero, color: '#c084fc', textShadow: '3px 3px 0 #000', marginBottom: 6 }}>
-                  LV {player.level}
+                <div style={{ ...S.hero, color: era.color, textShadow: `3px 3px 0 #000`, marginBottom: 4 }}>
+                  {era.name.toUpperCase()}
                 </div>
-                <h2 style={{ ...S.heading, fontSize: 18, color: '#e9d5ff', marginBottom: 24 }}>
-                  {currentLevelData.title.toUpperCase()}
-                </h2>
+                <div style={{ ...S.heading, fontSize: 22, color: era.color, marginBottom: 6, opacity: 0.7 }}>
+                  {roman}
+                </div>
+                <p style={{ ...S.body, fontSize: 11, color: '#5c4a3d', marginBottom: 20 }}>
+                  {fmt(totalMins)} de enfoque total · {totalHours}h
+                </p>
 
-                {!isMaxLevel ? (
-                  <div style={{ textAlign: 'left' }}>
+                {/* Rank progress bar */}
+                {!rp.isAbsMax && (
+                  <div style={{ textAlign: 'left', marginBottom: 16 }}>
                     <div className="flex justify-between" style={{ marginBottom: 6 }}>
-                      <span style={{ ...S.label, color: '#4c1d95' }}>{player.xp.toLocaleString()} XP</span>
-                      <span style={{ ...S.label, color: '#4c1d95' }}>
-                        → LV {nextLevelData!.level} · {nextLevelData!.xpRequired.toLocaleString()} XP
+                      <span style={{ ...S.label, color: era.border, fontSize: 9 }}>
+                        {era.name.toUpperCase()} {roman}
+                      </span>
+                      <span style={{ ...S.label, color: era.border, fontSize: 9 }}>
+                        {nextRankInEra
+                          ? `→ ${era.name.toUpperCase()} ${ROMAN[rp.rankInEra]} en ${fmt(minsToNextRank)}`
+                          : nextEra
+                            ? `→ ERA ${nextEra.name.toUpperCase()} en ${fmt(minsToNextEra!)}`
+                            : ''}
                       </span>
                     </div>
-                    <div style={{ height: 14, background: '#07000f', border: '2px solid #2d1b69', position: 'relative', overflow: 'hidden', marginBottom: 6 }}>
-                      <div style={{ height: '100%', width: `${levelProgress}%`, background: 'linear-gradient(to right, #581c87, #c084fc)', transition: 'width 0.6s ease' }} />
-                      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.4) calc(10% - 1px), rgba(0,0,0,0.4) 10%)', pointerEvents: 'none' }} />
+                    <div style={{ height: 14, background: '#07000f', border: `2px solid ${era.border}`, position: 'relative', overflow: 'hidden', marginBottom: 6 }}>
+                      <div style={{ height: '100%', width: `${rp.progress}%`, background: `linear-gradient(to right, ${era.border}, ${era.color})`, transition: 'width 0.6s ease' }} />
+                      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.3) calc(10% - 1px), rgba(0,0,0,0.3) 10%)', pointerEvents: 'none' }} />
                     </div>
                     <div className="flex justify-between">
-                      <span style={{ ...S.label, color: '#4c1d95' }}>{xpIntoLevel.toLocaleString()} / {xpNeededForLevel.toLocaleString()} XP</span>
-                      <span style={{ ...S.label, color: '#7c3aed' }}>{Math.round(levelProgress)}%</span>
+                      <span style={{ ...S.label, color: era.border, fontSize: 9 }}>{fmt(totalMins - rp.rankStart)} / {fmt(era.minsPerRank)}</span>
+                      <span style={{ ...S.label, color: era.color, fontSize: 9 }}>{Math.round(rp.progress)}%</span>
                     </div>
                   </div>
-                ) : (
-                  <p style={{ ...S.heading, color: '#c084fc' }}>★  NIVEL MÁXIMO ALCANZADO  ★</p>
+                )}
+                {rp.isAbsMax && (
+                  <p style={{ ...S.heading, color: era.color }}>★  MAESTRÍA ABSOLUTA ALCANZADA  ★</p>
                 )}
 
-                {/* XP guide */}
-                <div style={{ marginTop: 24, padding: 16, border: '1px solid #2d1b69', background: '#07000f' }}>
-                  <p style={{ ...S.label, color: '#4c1d95', textAlign: 'center', marginBottom: 16 }}>⸺  CÓMO GANAR XP  ⸺</p>
+                {/* Era summary row */}
+                <div style={{ marginTop: 20, padding: 16, border: `1px solid ${era.border}`, background: '#07000f' }}>
+                  <p style={{ ...S.label, color: era.border, textAlign: 'center', marginBottom: 16, fontSize: 9 }}>⸺  RESUMEN DE LA JERARQUÍA  ⸺</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { label: '1 min enfoque', value: '10 XP' },
-                      { label: '30+ min bonus', value: '+10%' },
-                      { label: '60+ min bonus', value: '+25%' },
-                      { label: 'Boss derrotado', value: '+150 XP' },
+                      { label: 'Era actual',   value: `${rp.eraIdx + 1} / 10` },
+                      { label: 'Rango global', value: `${player.rankIndex + 1} / 100` },
+                      { label: 'Próx. Era en', value: minsToNextEra != null && minsToNextEra > 0 ? fmt(minsToNextEra) : '—' },
+                      { label: 'Puntuación',   value: player.xp.toLocaleString() },
                     ].map(({ label, value }) => (
-                      <div key={label} className="text-center p-3" style={{ border: '1px solid #1e1040', background: '#050010' }}>
-                        <p style={{ ...S.label, color: '#4c1d95', marginBottom: 8, fontSize: 9 }}>{label}</p>
-                        <p style={{ ...S.body, color: '#c084fc', fontSize: 13 }}>{value}</p>
+                      <div key={label} className="text-center p-3" style={{ border: `1px solid ${era.border}`, background: era.bg }}>
+                        <p style={{ ...S.label, color: era.border, marginBottom: 8, fontSize: 8 }}>{label}</p>
+                        <p style={{ ...S.body, color: era.color, fontSize: 12 }}>{value}</p>
                       </div>
                     ))}
                   </div>
@@ -182,41 +208,71 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
               </div>
             </div>
 
-            {/* Level ladder */}
+            {/* Full 100-rank escalafón grouped by era */}
             <div className="p-5" style={{ border: '2px solid #3d2817', background: '#0a0504', boxShadow: '3px 3px 0 #000' }}>
-              <p style={{ ...S.label, color: '#5c4a3d', textAlign: 'center', marginBottom: 20 }}>⸺  ESCALAFÓN DE NIVELES  ⸺</p>
-              <div className="space-y-1">
-                {LEVELS.map((lvl) => {
-                  const isUnlocked = player.level >= lvl.level;
-                  const isCurrent  = player.level === lvl.level;
+              <p style={{ ...S.label, color: '#5c4a3d', textAlign: 'center', marginBottom: 24 }}>
+                ⸺  ESCALAFÓN COMPLETO — 10 ERAS × 10 RANGOS  ⸺
+              </p>
+              <div className="space-y-6">
+                {ERAS.map((e) => {
+                  const eraUnlocked = player.rankIndex >= e.index * 10;
+                  const isCurrentEra = rp.eraIdx === e.index;
                   return (
-                    <div
-                      key={lvl.level}
-                      className="flex items-center gap-3 p-3"
-                      style={{
-                        border: `1px solid ${isCurrent ? '#581c87' : isUnlocked ? '#2d1b69' : '#1a1008'}`,
-                        background: isCurrent ? '#0a000f' : isUnlocked ? '#07000a' : '#0a0504',
-                        opacity: isUnlocked ? 1 : 0.4,
-                      }}
-                    >
-                      <span style={{ width: 26, textAlign: 'center', fontSize: 16, opacity: isUnlocked ? 1 : 0.3 }}>{lvl.icon}</span>
-                      <span style={{ ...S.label, width: 36, color: isCurrent ? '#c084fc' : isUnlocked ? '#7c3aed' : '#2d1b69', flexShrink: 0 }}>
-                        LV{lvl.level}
-                      </span>
-                      <span style={{ ...S.body, flex: 1, fontSize: 11, color: isCurrent ? '#e9d5ff' : isUnlocked ? '#a78bfa' : '#2d1b69' }}>
-                        {lvl.title.toUpperCase()}
-                      </span>
-                      <span style={{ ...S.label, color: '#3d2817', fontSize: 9 }}>
-                        {lvl.xpRequired.toLocaleString()} XP
-                      </span>
-                      {isCurrent && (
-                        <span style={{ ...S.label, fontSize: 9, padding: '4px 8px', border: '1px solid #581c87', color: '#c084fc', background: '#0f0018' }}>
-                          ACTUAL
+                    <div key={e.name}>
+                      {/* Era header */}
+                      <div
+                        className="flex items-center gap-3 px-3 py-2 mb-2"
+                        style={{
+                          border: `2px solid ${isCurrentEra ? e.border : eraUnlocked ? e.border + '55' : '#1a1008'}`,
+                          background: isCurrentEra ? e.bg : eraUnlocked ? '#0a0504' : '#070504',
+                          opacity: eraUnlocked ? 1 : 0.4,
+                        }}
+                      >
+                        <span style={{ fontSize: 20 }}>{e.icon}</span>
+                        <span style={{ ...S.heading, color: isCurrentEra ? e.color : eraUnlocked ? e.color + 'aa' : '#3d2817', fontSize: 13 }}>
+                          ERA {['I','II','III','IV','V','VI','VII','VIII','IX','X'][e.index]} — {e.name.toUpperCase()}
                         </span>
-                      )}
-                      {isUnlocked && !isCurrent && (
-                        <span style={{ fontSize: 14, color: '#166534' }}>✓</span>
-                      )}
+                        <span style={{ ...S.label, color: '#3d2817', fontSize: 8, marginLeft: 'auto' }}>
+                          desde {e.startMins.toLocaleString()} min · {e.minsPerRank} min/rango
+                        </span>
+                        {eraUnlocked && !isCurrentEra && (
+                          <span style={{ fontSize: 14, color: '#166534' }}>✓</span>
+                        )}
+                        {isCurrentEra && (
+                          <span style={{ ...S.label, fontSize: 8, padding: '3px 8px', border: `1px solid ${e.border}`, color: e.color, background: e.bg }}>
+                            ACTUAL
+                          </span>
+                        )}
+                      </div>
+                      {/* 10 ranks within era */}
+                      <div className="grid grid-cols-5 md:grid-cols-10 gap-1 pl-2">
+                        {ROMAN.map((r, ri) => {
+                          const globalRank   = e.index * 10 + ri;
+                          const rankUnlocked = player.rankIndex > globalRank;
+                          const isThisRank   = player.rankIndex === globalRank;
+                          return (
+                            <div
+                              key={r}
+                              className="text-center py-2 px-1"
+                              style={{
+                                border: `1px solid ${isThisRank ? e.border : rankUnlocked ? e.border + '44' : '#1a1008'}`,
+                                background: isThisRank ? e.bg : '#0a0504',
+                                opacity: rankUnlocked || isThisRank ? 1 : 0.25,
+                              }}
+                            >
+                              <div style={{ fontSize: 9, color: isThisRank ? e.color : rankUnlocked ? e.color + '99' : '#3d2817' }}>
+                                {r}
+                              </div>
+                              {isThisRank && (
+                                <div style={{ fontSize: 7, color: e.color, marginTop: 2 }}>▲</div>
+                              )}
+                              {rankUnlocked && !isThisRank && (
+                                <div style={{ fontSize: 8, color: '#166534', marginTop: 1 }}>✓</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   );
                 })}
@@ -287,7 +343,6 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
           </div>
         )}
 
-
       </div>
 
       <style>{`
@@ -296,8 +351,8 @@ export function TrophiesScreen({ onBackToMenu }: TrophiesScreenProps) {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes ember-pulse {
-          0%, 100% { opacity: 0.85; }
-          50%       { opacity: 1; }
+          0%, 100% { opacity: 0.85; transform: scale(1); }
+          50%       { opacity: 1;    transform: scale(1.05); }
         }
       `}</style>
     </div>

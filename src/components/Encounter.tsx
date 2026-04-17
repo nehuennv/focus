@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useStore, BEASTS, LEVELS, calculateXpGain } from '../store/useStore';
+import { useStore, BEASTS, calculateXpGain, calculateRankIndex, getRankDisplay } from '../store/useStore';
 import { RestScreen } from './RestScreen';
 
 interface EncounterProps {
@@ -73,17 +73,16 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
       const iv = setInterval(() => setTimeLeft(p => p - 1), 1000);
       return () => clearInterval(iv);
     }
-    const levelBefore   = player.level;
+    const rankBefore    = player.rankIndex;
     const isNowDefeated = Math.max(0, domain.currentDebtMins - chargedMins) <= 0;
     const bossDefeated  = isNowDefeated && !domain.isDefeated;
     const xpGained      = calculateXpGain(chargedMins, bossDefeated);
-    const xpAfter       = player.xp + xpGained;
-    const levelAfter    = LEVELS.slice().reverse().find(l => xpAfter >= l.xpRequired)?.level ?? 1;
+    const rankAfter     = calculateRankIndex(player.totalAccumulatedMins + chargedMins);
 
     completeRitual(domain.id, selectedBeastId, chargedMins);
     setIsAttacking(false);
     setChargedMins(0);
-    setXpPopup({ xp: xpGained, bossDefeated, leveledUp: levelAfter > levelBefore, newLevel: levelAfter });
+    setXpPopup({ xp: xpGained, bossDefeated, leveledUp: rankAfter > rankBefore, newLevel: rankAfter });
     setTimeout(() => { setXpPopup(null); setIsResting(true); }, 3400);
   }, [isAttacking, timeLeft, domain, completeRitual, selectedBeastId, chargedMins, player]);
 
@@ -373,11 +372,14 @@ export function Encounter({ domainId, selectedBeastId, onBack }: EncounterProps)
                 ☠  JEFE DERROTADO  ·  +150 XP BONUS
               </div>
             )}
-            {xpPopup.leveledUp && (
-              <div style={{ marginTop: 24, padding: '16px 32px', border: '3px solid #fbbf24', background: '#1c0800', fontFamily: '"Press Start 2P", monospace', fontSize: 16, color: '#fde047', textShadow: '2px 2px 0 #000', boxShadow: '5px 5px 0 #000, 0 0 40px rgba(251,191,36,0.5)', animation: 'ember-pulse 0.7s ease-in-out infinite', letterSpacing: '0.08em' }}>
-                ✦  NIVEL {xpPopup.newLevel} ALCANZADO  ✦
-              </div>
-            )}
+            {xpPopup.leveledUp && (() => {
+              const rd = getRankDisplay(xpPopup.newLevel);
+              return (
+                <div style={{ marginTop: 24, padding: '16px 32px', border: `3px solid ${rd.era.border}`, background: rd.era.bg, fontFamily: '"Press Start 2P", monospace', fontSize: 14, color: rd.era.color, textShadow: '2px 2px 0 #000', boxShadow: `5px 5px 0 #000, 0 0 40px ${rd.era.glow}`, animation: 'ember-pulse 0.7s ease-in-out infinite', letterSpacing: '0.08em' }}>
+                  {rd.era.icon}  {rd.fullTitle.toUpperCase()} ALCANZADO  {rd.era.icon}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore, BEASTS, LEVELS } from '../store/useStore';
+import { useStore, BEASTS, getRankDisplay } from '../store/useStore';
 import { Encounter } from './Encounter';
 
 interface MainMenuProps {
@@ -61,7 +61,7 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
     setSelectedBeastId('alberic');
   };
 
-  const currentLevelData = LEVELS.find(l => l.level === player.level) ?? LEVELS[0];
+  const rd = getRankDisplay(player.rankIndex);
 
   // If in encounter, render it full screen
   if (isInEncounter && selectedDomainId) {
@@ -90,7 +90,7 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
             ⚔️ FOCUS SOULS ⚔️
           </h1>
           <p className="text-xs text-[#5c4a3d]">
-            {currentLevelData.icon} LV {player.level} · {currentLevelData.title} — {player.xp.toLocaleString()} XP
+            {rd.era.icon} {rd.fullTitle.toUpperCase()} — {player.xp.toLocaleString()} pts
           </p>
         </div>
 
