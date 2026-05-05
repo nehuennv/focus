@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useMovement, type Direction } from '../hooks/useMovement';
-import { useStore, BEASTS, ERAS, getRankProgress } from '../store/useStore';
+import { useStore, BEASTS, ERAS, getRankProgress, BEAST_UNLOCK_ORDER, isBeastUnlocked } from '../store/useStore';
 import { RPGDialogue, type DialogueOption } from './RPGDialogue';
+import { BeastSelectDialogue } from './BeastSelectDialogue';
 import { Encounter } from './Encounter';
 
 // ─── Grid constants ────────────────────────────────────────────────────────────
@@ -15,8 +16,9 @@ const FLOOR = 0;
 const PORTAL = 2;   // → Ritual
 const SHELF = 3;   // → Bestiario
 const DESK = 4;   // → Dominios
+const BED = 5;    // → Descansar
 
-const WALKABLE = new Set([FLOOR, PORTAL, SHELF, DESK]);
+const WALKABLE = new Set([FLOOR, PORTAL, SHELF, DESK, BED]);
 
 // ─── Tile map 20 × 15 ─────────────────────────────────────────────────────────
 // Límites del área caminable:
@@ -30,15 +32,15 @@ const MAP: number[][] = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 2  ← pared superior -2
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 3  ← pared superior -3
   [1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 2, 0, 0, 1, 1, 1, 1, 1, 1], // 4  PORTAL(8-11) ← top-center
-  [1, 1, 3, 3, 3, 3, 0, 0, 2, 2, 2, 2, 0, 0, 1, 1, 1, 1, 1, 1], // 5  SHELF(3-4)
-  [1, 1, 3, 3, 3, 3, 0, 0, 0, 2, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1], // 6
-  [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 1, 1, 1, 1, 1], // 7
-  [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 1, 1, 1, 1, 1], // 8  DESK(13)
-  [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 1, 1, 1, 1, 1], // 6
-  [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 1, 1, 1, 1, 1], // 10
-  [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 11
-  [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 12
-  [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1], // 13
+  [1, 1, 3, 3, 3, 0, 0, 0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1], // 5  SHELF(3-4)
+  [1, 1, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1], // 6
+  [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 4, 4, 0, 1, 1, 1, 1, 1], // 7
+  [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 1, 1, 1, 1, 1], // 8  DESK(13)
+  [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 1, 1, 1, 1, 1], // 6
+  [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 1, 1, 1, 1, 1], // 10
+  [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1], // 11
+  [1, 1, 1, 1, 1, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1], // 12  BED(2-8)
+  [1, 1, 1, 1, 1, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1], // 13  BED(2-8)
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 14 ← pared inferior
 ];
 
@@ -69,13 +71,14 @@ const SPRITES: Record<Direction, { idle: string; frames: [string, string] }> = {
 };
 
 // Sprite display — fixed height only, width is auto (preserves each sprite's aspect ratio)
-const SPR_H = TILE * 3; // 126 px — ajusta este único valor para cambiar el tamaño
+const SPR_H = TILE * 3.6; // 151 px — ajusta este único valor para cambiar el tamaño
 
 // ─── Trigger zone overlays (for visual glow on the map) ───────────────────────
 const TRIGGER_ZONES = [
   { key: 'portal', col: 8, row: 4, span: 4, color: '180, 18, 18', border: '248,113,113', label: 'PORTAL', tile: PORTAL },
-  { key: 'shelf', col: 3, row: 5, span: 2, color: '146,64,14', border: '217,119,6', label: 'BESTIARIO', tile: SHELF },
+  { key: 'shelf', col: 2, row: 5, span: 2, color: '146,64,14', border: '217,119,6', label: 'BESTIARIO', tile: SHELF },
   { key: 'desk', col: 12, row: 8, span: 2, color: '133, 133, 133', border: '133, 133, 133', label: 'DOMINIOS', tile: DESK },
+  { key: 'bed', col: 2, row: 12, span: 7, color: '180, 100, 20', border: '240, 160, 60', label: 'DESCANSAR', tile: BED },
 ];
 
 // ─── Trigger proximity info ────────────────────────────────────────────────────
@@ -83,23 +86,12 @@ const TRIGGER_INFO: Record<number, { label: string; hint: string; color: string 
   [PORTAL]: { label: 'PORTAL', hint: 'Comenzar Ritual', color: '#ff362bff' },
   [SHELF]: { label: 'BIBLIOTECA', hint: 'Abrir Bestiario', color: '#f59e0b' },
   [DESK]: { label: 'ESCRITORIO', hint: 'Ver Dominios', color: '#22d3ee' },
+  [BED]: { label: 'CAMA', hint: 'Descansar', color: '#f0a030' },
 };
 
-// ─── Duration options ──────────────────────────────────────────────────────────
-const DURATION_OPTIONS: DialogueOption[] = [
-  { id: '60', label: '1 hora   · 60 min' },
-  { id: '120', label: '2 horas  · 120 min' },
-  { id: '180', label: '3 horas  · 180 min' },
-  { id: '240', label: '4 horas  · 240 min' },
-  { id: '300', label: '5 horas  · 300 min' },
-  { id: '360', label: '6 horas  · 360 min' },
-  { id: '420', label: '7 horas  · 420 min' },
-  { id: '480', label: '8 horas  · 480 min' },
-];
-
 // ─── Ritual state machine ──────────────────────────────────────────────────────
-type DialogPhase = 'duration' | 'domain' | 'beast';
-interface RitualData { durationMins: number; domainId: string; beastId: string; }
+type DialogPhase = 'domain' | 'confirm' | 'beast' | 'rest';
+interface RitualData { domainId: string; beastId: string; }
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 interface Hub2DProps {
@@ -111,19 +103,24 @@ interface Hub2DProps {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTutorial }: Hub2DProps) {
-  const { domains, player } = useStore();
-  const rp      = getRankProgress(player.totalAccumulatedMins);
-  const eraIdx  = Math.floor(player.rankIndex / 10);
-  const era     = ERAS[Math.min(eraIdx, ERAS.length - 1)];
-  const roman   = ['I','II','III','IV','V','VI','VII','VIII','IX','X'][player.rankIndex % 10];
+  const { domains, player, settings, setSettings, isDay, setIsDay, debugUnlockAll, setDebugUnlockAll } = useStore();
+  const rp = getRankProgress(player.totalAccumulatedMins);
+  const eraIdx = Math.floor(player.rankIndex / 10);
+  const era = ERAS[Math.min(eraIdx, ERAS.length - 1)];
+  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][player.rankIndex % 10];
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [draft, setDraft] = useState(settings);
 
   // Ritual state
   const [dialogPhase, setDialogPhase] = useState<DialogPhase | null>(null);
   const [ritual, setRitual] = useState<Partial<RitualData>>({});
   const [fadeToBlack, setFadeToBlack] = useState(false);
   const [inEncounter, setInEncounter] = useState(false);
+  const [restTransition, setRestTransition] = useState<'fade-out' | 'fade-in' | null>(null);
+  const [restMessage, setRestMessage] = useState('');
 
-  const isBlocked = dialogPhase !== null || fadeToBlack || inEncounter;
+  const isBlocked = dialogPhase !== null || fadeToBlack || inEncounter || restTransition !== null;
 
   // Movement
   const { position, facing, isMoving } = useMovement({
@@ -155,24 +152,14 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
   }, []);
 
   // ── Dialogue handlers ──────────────────────────────────────────────────────
-  const handleDurationSelect = useCallback((opt: DialogueOption) => {
-    setRitual(prev => ({ ...prev, durationMins: Number(opt.id) }));
-    setDialogPhase('domain');
-  }, []);
-
   const handleDomainSelect = useCallback((opt: DialogueOption) => {
     setRitual(prev => ({ ...prev, domainId: opt.id }));
-    setDialogPhase('beast');
+    setDialogPhase('confirm');
   }, []);
 
   const handleBeastSelect = useCallback((opt: DialogueOption) => {
     setRitual(prev => {
-      const final: RitualData = {
-        durationMins: prev.durationMins ?? 60,
-        domainId: prev.domainId ?? '',
-        beastId: opt.id,
-      };
-      launchEncounter(final);
+      launchEncounter({ domainId: prev.domainId ?? '', beastId: opt.id });
       return prev;
     });
   }, [launchEncounter]);
@@ -180,14 +167,6 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
   // ── Dialogue props per phase ───────────────────────────────────────────────
   const getDialogueProps = () => {
     switch (dialogPhase) {
-      case 'duration':
-        return {
-          speakerName: 'PORTAL OSCURO',
-          text: '¿Qué ofrenda de tiempo entregarás en este ciclo?',
-          options: DURATION_OPTIONS,
-          onSelect: handleDurationSelect,
-          onClose: () => setDialogPhase(null),
-        };
       case 'domain': {
         if (domains.length === 0) {
           return {
@@ -202,18 +181,65 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
           text: '¿Qué dominio deseas purgar hoy?',
           options: domains.map(d => ({
             id: d.id,
-            label: `${d.name.slice(0, 22).padEnd(22)} · ${d.currentDebtMins}min`,
+            label: `${d.name.slice(0, 22).padEnd(22)} · ${d.currentDebtMins}min deuda`,
           })),
           onSelect: handleDomainSelect,
           onClose: () => setDialogPhase(null),
+        };
+      }
+      case 'confirm': {
+        const domain = domains.find(d => d.id === ritual.domainId);
+        const beast = domain ? BEASTS[domain.beastId as keyof typeof BEASTS] : null;
+        return {
+          speakerName: 'PORTAL OSCURO',
+          text: beast && domain
+            ? `Dominio: ${domain.name}.\nGuardián: ${beast.name}.\n¿Procedes al combate o cambias de bestia?`
+            : 'Algo salió mal. Vuelve al inicio.',
+          options: [
+            { id: 'go', label: `⚔  Combatir con ${beast?.name ?? '???'}` },
+            { id: 'change', label: '↺  Elegir otra bestia' },
+          ],
+          onSelect: (opt: DialogueOption) => {
+            if (opt.id === 'change') {
+              setDialogPhase('beast');
+            } else if (domain && beast) {
+              launchEncounter({ domainId: domain.id, beastId: domain.beastId });
+            }
+          },
+          onClose: () => setDialogPhase('domain'),
         };
       }
       case 'beast':
         return {
           speakerName: 'PORTAL OSCURO',
           text: '¿A qué bestia te enfrentarás en el combate?',
-          options: Object.values(BEASTS).map(b => ({ id: b.id, label: b.name })),
+          options: BEAST_UNLOCK_ORDER
+            .filter(e => isBeastUnlocked(e.beastId, eraIdx, debugUnlockAll))
+            .map(e => ({ id: e.beastId, label: BEASTS[e.beastId].name })),
           onSelect: handleBeastSelect,
+          onClose: () => setDialogPhase('confirm'),
+        };
+      case 'rest':
+        return {
+          speakerName: isDay ? '🌙 ANOCHECER' : '🌅 AMANECER',
+          text: isDay
+            ? 'La oscuridad se acerca. ¿Dejar caer el sol y descansar?'
+            : 'La luz rompe el horizonte. ¿Despertar y enfrentar un nuevo día?',
+          options: [
+            { id: 'rest', label: isDay ? 'Dejar caer el sol' : 'Despertar al amanecer' },
+          ],
+          onSelect: () => {
+            setDialogPhase(null);
+            setRestMessage(isDay
+              ? 'Cierra los ojos. La deuda puede esperar al amanecer.'
+              : 'La luz regresa. Descansaste bien.');
+            setRestTransition('fade-out');
+            setTimeout(() => {
+              setIsDay(!isDay);
+              setRestTransition('fade-in');
+              setTimeout(() => setRestTransition(null), 2000);
+            }, 3500);
+          },
           onClose: () => setDialogPhase(null),
         };
       default:
@@ -228,14 +254,22 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
       if (e.key !== 'Enter' && e.key !== ' ') return;
       e.preventDefault();
 
-      // Check proximity to triggers (including 1 tile away)
-      const isNearPortal = (currentTile === PORTAL) || (Math.abs(position.x - 8) <= 4 && Math.abs(position.y - 4) <= 1);
-      const isNearShelf = (currentTile === SHELF) || (Math.abs(position.x - 3) <= 2 && Math.abs(position.y - 5) <= 1);
-      const isNearDesk = (currentTile === DESK) || (Math.abs(position.x - 12) <= 2 && Math.abs(position.y - 8) <= 1);
+      // Check proximity to triggers — specific zones evaluated FIRST so they
+      // always win over the large portal zone when there is overlap.
+      const isNearShelf  = currentTile === SHELF
+        || (position.x >= 1 && position.x <= 5 && position.y >= 4 && position.y <= 7);
+      const isNearDesk   = currentTile === DESK
+        || (position.x >= 10 && position.x <= 14 && position.y >= 7 && position.y <= 10);
+      const isNearBed    = currentTile === BED
+        || (position.x >= 2 && position.x <= 9 && position.y >= 11 && position.y <= 14);
+      // Portal only activates when none of the specific zones match
+      const isNearPortal = !isNearShelf && !isNearDesk && !isNearBed
+        && (currentTile === PORTAL || (position.x >= 6 && position.x <= 13 && position.y >= 3 && position.y <= 5));
 
-      if (isNearPortal) setDialogPhase('duration');
-      else if (isNearShelf) onOpenBestiary();
-      else if (isNearDesk) onOpenDomains();
+      if (isNearShelf)       onOpenBestiary();
+      else if (isNearDesk)   onOpenDomains();
+      else if (isNearBed)    setDialogPhase('rest');
+      else if (isNearPortal) setDialogPhase('domain');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -253,6 +287,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
   }
 
   // ── Hub render ────────────────────────────────────────────────────────────
+  const scale = settings.hubScale;
   const gridW = COLS * TILE;
   const gridH = ROWS * TILE;
   const dialogueProps = getDialogueProps();
@@ -267,302 +302,312 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
       className="flex flex-col items-center justify-center min-h-screen bg-[#0a0504] select-none"
       style={{ fontFamily: '"Press Start 2P", monospace' }}
     >
-      {/* ── Top HUD ── */}
-      {!isBlocked && (
-        <div className="mb-3 w-full flex items-center justify-between px-2" style={{ maxWidth: COLS * TILE }}>
-          <div className="flex gap-6" style={{ color: '#3d2817', fontSize: '7px' }}>
-            <span>WASD · FLECHAS → MOVER</span>
-            <span>ENTER → INTERACTUAR</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {/* Tutorial button */}
-            <button
-              onClick={onOpenTutorial}
-              title="Ayuda / Tutorial"
-              style={{
-                border: `1px solid #3d2817`, background: '#0a0504',
-                color: '#5c4a3d', fontSize: '9px', width: 24, height: 24,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '2px 2px 0 #000', fontFamily: '"Press Start 2P", monospace',
-              }}
-            >?</button>
-            {/* Rank indicator */}
-            <button
-              onClick={onOpenTrophies}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                border: `2px solid ${era.border}`, background: era.bg,
-                padding: '5px 10px', cursor: 'pointer', boxShadow: '2px 2px 0 #000',
-              }}
-            >
-              <span style={{ fontSize: 12 }}>{era.icon}</span>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '7px', color: era.color, fontFamily: '"Press Start 2P", monospace', marginBottom: 2 }}>
-                  {era.name.toUpperCase()} {roman}
-                </div>
-                <div style={{ width: 80, height: 4, background: '#07000f', border: `1px solid ${era.border}`, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${rp.progress}%`, background: era.color }} />
-                </div>
+      {/* ── Scaled game area ── */}
+      <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+        {/* ── Top HUD ── */}
+        {!isBlocked && (
+          <div className="mb-3 w-full flex items-center justify-between px-2" style={{ maxWidth: COLS * TILE }}>
+            <div className="flex gap-6" style={{ color: '#3d2817', fontSize: '7px' }}>
+              <span>WASD · FLECHAS → MOVER</span>
+              <span>ENTER → INTERACTUAR</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {/* Tutorial button */}
+              <button
+                onClick={onOpenTutorial}
+                title="Ayuda / Tutorial"
+                style={{
+                  border: `1px solid #3d2817`, background: '#0a0504',
+                  color: '#5c4a3d', fontSize: '9px', width: 24, height: 24,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '2px 2px 0 #000', fontFamily: '"Press Start 2P", monospace',
+                }}
+              >?</button>
+              {/* Settings button */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => { setDraft(settings); setShowSettings(s => !s); }}
+                  title="Configuración"
+                  style={{
+                    border: `1px solid ${showSettings ? '#d97706' : '#3d2817'}`,
+                    background: showSettings ? '#1a0e02' : '#0a0504',
+                    color: showSettings ? '#d97706' : '#5c4a3d', fontSize: '11px', width: 24, height: 24,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '2px 2px 0 #000', fontFamily: '"Press Start 2P", monospace',
+                  }}
+                >⚙</button>
+                {showSettings && (
+                  <div style={{
+                    position: 'absolute', top: 30, right: 0, zIndex: 100,
+                    background: '#0a0504', border: '2px solid #3d2817',
+                    boxShadow: '4px 4px 0 #000', padding: '14px 16px',
+                    display: 'flex', flexDirection: 'column', gap: 14, width: 220,
+                  }}>
+                    {([
+                      { label: 'TAMAÑO', key: 'hubScale', min: 0.6, max: 1.5, step: 0.05 },
+                      { label: 'MÚSICA', key: 'musicVol', min: 0, max: 1, step: 0.05 },
+                      { label: 'EFECTOS', key: 'sfxVol', min: 0, max: 1, step: 0.05 },
+                    ] as const).map(({ label, key, min, max, step }) => (
+                      <div key={key}>
+                        <div style={{ fontSize: '7px', color: '#8b7355', marginBottom: 6, letterSpacing: '0.1em' }}>
+                          {label}
+                          <span style={{ float: 'right', color: '#d97706' }}>
+                            {Math.round(draft[key] * 100)}%
+                          </span>
+                        </div>
+                        <div style={{ position: 'relative', height: 8, background: '#1a1008', border: '1px solid #2a1810' }}>
+                          <div style={{
+                            position: 'absolute', left: 0, top: 0, height: '100%',
+                            width: `${((draft[key] - min) / (max - min)) * 100}%`,
+                            background: '#92400e',
+                          }} />
+                          <input
+                            type="range" min={min} max={max} step={step}
+                            value={draft[key]}
+                            onChange={e => setDraft(d => ({ ...d, [key]: Number(e.target.value) }))}
+                            style={{
+                              position: 'absolute', inset: 0, width: '100%', height: '100%',
+                              opacity: 0, cursor: 'pointer', margin: 0,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => { setSettings(draft); setShowSettings(false); }}
+                      style={{
+                        marginTop: 4, width: '100%', padding: '7px 0',
+                        background: '#92400e', border: '2px solid #d97706',
+                        color: '#fbbf24', fontSize: '7px', letterSpacing: '0.15em',
+                        cursor: 'pointer', fontFamily: '"Press Start 2P", monospace',
+                        boxShadow: '2px 2px 0 #000',
+                      }}
+                    >APLICAR</button>
+
+                    {/* Debug unlock */}
+                    <div style={{ marginTop: 10, borderTop: '1px solid #1a1a1a', paddingTop: 10 }}>
+                      <div style={{ fontSize: '5px', color: '#2a2a2a', letterSpacing: '0.1em', marginBottom: 6 }}>DEV</div>
+                      <button
+                        onClick={() => setDebugUnlockAll(!debugUnlockAll)}
+                        style={{
+                          width: '100%', padding: '7px 0',
+                          background: debugUnlockAll ? '#14532d' : '#0f0804',
+                          border: `2px solid ${debugUnlockAll ? '#4ade80' : '#2a2a2a'}`,
+                          color: debugUnlockAll ? '#4ade80' : '#3a3a3a',
+                          fontSize: '6px', letterSpacing: '0.1em',
+                          cursor: 'pointer', fontFamily: '"Press Start 2P", monospace',
+                          boxShadow: '2px 2px 0 #000',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {debugUnlockAll ? '🔓 TODO DESBLOQUEADO' : '🔒 DESBLOQUEAR TODO'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Grid container ── */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          width: gridW,
-          height: gridH,
-          border: '4px solid #1a1008',
-          boxShadow: '0 0 60px rgba(0,0,0,0.9), 0 0 120px rgba(0,0,0,0.7)',
-        }}
-      >
-        {/* Layer 0 — Room background */}
-        <img
-          src="img/room.png"
-          alt=""
-          draggable={false}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'fill',
-            imageRendering: 'pixelated',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        />
-
-        {/* Layer 1 — Trigger zone glow overlays */}
-        {TRIGGER_ZONES.map(({ key, col, row, span, color, tile }) => {
-          const isActive = currentTile === tile && !isBlocked;
-          // Portal (ritual) - solo un glow rojo difuminado, SIN bordes ni cuadrados
-          if (key === 'portal') {
-            return (
-              <div
-                key={key}
+              {/* Rank indicator */}
+              <button
+                onClick={onOpenTrophies}
                 style={{
-                  position: 'absolute',
-                  left: col * TILE,
-                  top: row * TILE,
-                  width: span * TILE,
-                  height: TILE,
-                  background: 'transparent',
-                  borderRadius: '50%',
-                  filter: 'blur(8px)',
-                  boxShadow: isActive
-                    ? `0 0 40px rgba(220, 38, 38, 0.7)`
-                    : `0 0 20px rgba(180, 18, 18, 0.25)`,
-                  transition: 'box-shadow 0.3s ease',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                  animation: 'portal-pulse 2.5s ease-in-out infinite',
-                }}
-              />
-            );
-          }
-          // Bestiario - glow sutil sin bordes marcados
-          if (key === 'shelf') {
-            return (
-              <div
-                key={key}
-                style={{
-                  position: 'absolute',
-                  left: col * TILE,
-                  top: row * TILE,
-                  width: span * TILE,
-                  height: TILE,
-                  background: `rgba(${color}, ${isActive ? 0.25 : 0.08})`,
-                  borderRadius: '4px',
-                  boxShadow: isActive
-                    ? `0 0 25px rgba(${color}, 0.5)`
-                    : `0 0 10px rgba(${color}, 0.15)`,
-                  transition: 'box-shadow 0.2s ease',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                }}
-              />
-            );
-          }
-          // Dominios - mismo efecto que ritual pero en gris
-          if (key === 'desk') {
-            return (
-              <div
-                key={key}
-                style={{
-                  position: 'absolute',
-                  left: col * TILE,
-                  top: row * TILE,
-                  width: span * TILE,
-                  height: TILE,
-                  background: 'transparent',
-                  borderRadius: '50%',
-                  filter: 'blur(8px)',
-                  boxShadow: isActive
-                    ? `0 0 40px rgba(133, 133, 133, 0.7)`
-                    : `0 0 20px rgba(133, 133, 133, 0.25)`,
-                  transition: 'box-shadow 0.3s ease',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                  animation: 'desk-pulse 2.5s ease-in-out infinite',
-                }}
-              />
-            );
-          }
-          return null;
-        })}
-
-        {/* Layer 2 — Zone labels (always subtle, brighter when active) */}
-        {TRIGGER_ZONES.map(({ key, col, row, span, border, label, tile }) => {
-          const isActive = currentTile === tile && !isBlocked;
-          return (
-            <div
-              key={`lbl-${key}`}
-              style={{
-                position: 'absolute',
-                left: col * TILE,
-                top: row * TILE,
-                width: span * TILE,
-                height: TILE,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                pointerEvents: 'none',
-                zIndex: 2,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '5px',
-                  color: `rgba(${border}, ${isActive ? 1 : 0.5})`,
-                  textShadow: isActive ? `0 0 8px rgba(${border}, 0.8)` : 'none',
-                  letterSpacing: '0.1em',
-                  transition: 'color 0.2s, text-shadow 0.2s',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  border: `2px solid ${era.border}`, background: era.bg,
+                  padding: '5px 10px', cursor: 'pointer', boxShadow: '2px 2px 0 #000',
                 }}
               >
-                {label}
-              </span>
+                <span style={{ fontSize: 12 }}>{era.icon}</span>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '7px', color: era.color, fontFamily: '"Press Start 2P", monospace', marginBottom: 2 }}>
+                    {era.name.toUpperCase()} {roman}
+                  </div>
+                  <div style={{ width: 80, height: 4, background: '#07000f', border: `1px solid ${era.border}`, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${rp.progress}%`, background: era.color }} />
+                  </div>
+                </div>
+              </button>
             </div>
-          );
-        })}
+          </div>
+        )}
 
-        {/* Layer 3 — Player character sprite
+        {/* ── Grid container ── */}
+        <div
+          className="relative overflow-hidden"
+          style={{
+            width: gridW,
+            height: gridH,
+            border: '4px solid #1a1008',
+            boxShadow: '0 0 60px rgba(0,0,0,0.9), 0 0 120px rgba(0,0,0,0.7)',
+          }}
+        >
+          {/* Layer 0 — Room background */}
+          <img
+            src={isDay ? "img/room-day.png" : "img/room.png"}
+            alt=""
+            draggable={false}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'fill',
+              imageRendering: 'pixelated',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          />
+
+          {/* Layer 1 — Floor light puddles (no boxes, no borders) */}
+          {TRIGGER_ZONES.map(({ key, col, row, span, tile }) => {
+            const isActive = currentTile === tile && !isBlocked;
+
+            const lightMap: Record<string, { r: string; g: string; b: string; anim: string }> = {
+              portal: { r: '255', g: '60', b: '40', anim: 'portal-pulse 2.5s ease-in-out infinite' },
+              shelf: { r: '217', g: '119', b: '6', anim: 'desk-pulse 3s ease-in-out infinite' },
+              desk: { r: '170', g: '170', b: '170', anim: 'desk-pulse 2.5s ease-in-out infinite' },
+              bed: { r: '230', g: '140', b: '30', anim: 'desk-pulse 3.2s ease-in-out infinite' },
+            };
+            const l = lightMap[key];
+            if (!l) return null;
+
+            const idleAlpha = key === 'portal' ? 0.28 : 0.16;
+            const activeAlpha = key === 'portal' ? 0.65 : 0.45;
+            const alpha = isActive ? activeAlpha : idleAlpha;
+            const rows = key === 'bed' ? 2 : 1;
+
+            return (
+              <div
+                key={key}
+                style={{
+                  position: 'absolute',
+                  // Centrado horizontalmente en la zona, pegado al borde inferior del tile
+                  left: col * TILE + (span * TILE * 0.1),
+                  bottom: (ROWS - row - rows) * TILE,
+                  width: span * TILE * 0.8,
+                  height: 14,
+                  background: `radial-gradient(ellipse at 50% 100%, rgba(${l.r},${l.g},${l.b},${alpha}) 0%, transparent 100%)`,
+                  filter: 'blur(6px)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  transition: 'opacity 0.4s ease',
+                  animation: l.anim,
+                }}
+              />
+            );
+          })}
+
+          {/* Layer 3 — Player character sprite
             left apunta al centro del tile; translateX(-50%) lo centra horizontalmente.
             El ancho es 'auto' para que cada sprite respete su propio aspect ratio. */}
-        <img
-          src={currentSprite}
-          alt="Player"
-          style={{
-            position: 'absolute',
-            left: sprCenterX,
-            top: sprTop,
-            height: SPR_H,
-            width: 'auto',
-            transform: 'translateX(-50%)',
-            imageRendering: 'pixelated',
-            filter: 'drop-shadow(0 5px 4px rgba(0,0,0,0.7))',
-            zIndex: 10,
-            transition: 'left 0.12s linear, top 0.12s linear',
-          }}
-        />
+          <img
+            src={currentSprite}
+            alt="Player"
+            style={{
+              position: 'absolute',
+              left: sprCenterX,
+              top: sprTop,
+              height: SPR_H,
+              width: 'auto',
+              transform: 'translateX(-50%)',
+              imageRendering: 'pixelated',
+              filter: `drop-shadow(0 5px 4px rgba(0,0,0,0.7))${isDay ? '' : ' brightness(0.7)'}`,
+              zIndex: 10,
+              transition: 'left 0.12s linear, top 0.12s linear',
+            }}
+          />
 
-        {/* Layer 4 — Vignette */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)',
-            pointerEvents: 'none',
-            zIndex: 15,
-          }}
-        />
-
-        {/* Layer 5 — Fade-to-black for encounter transition */}
-        {fadeToBlack && (
-          <>
-            {/* Shake effect on the grid container */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                animation: 'encounter-shake 0.9s ease-in-out',
-                pointerEvents: 'none',
-                zIndex: 40,
-              }}
-            />
-            {/* White flash */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: '#fff',
-                zIndex: 55,
-                animation: 'encounter-flash 0.9s ease-out forwards',
-              }}
-            />
-            {/* Red glow border */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                border: '4px solid #dc2626',
-                zIndex: 45,
-                animation: 'encounter-red-glow 0.9s ease-in-out',
-                pointerEvents: 'none',
-              }}
-            />
-            {/* Fade to black overlay */}
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: '#000',
-                zIndex: 50,
-                animation: 'hub-fadeblack 0.9s ease-in forwards',
-              }}
-            />
-          </>
-        )}
-      </div>
-
-      {/* ── Trigger prompt strip ── */}
-      <div style={{ marginTop: 14, height: 32 }}>
-        {triggerInfo ? (
+          {/* Layer 4 — Vignette */}
           <div
             style={{
-              padding: '8px 20px',
-              border: `2px solid ${triggerInfo.color}`,
-              color: triggerInfo.color,
-              fontSize: '9px',
-              fontWeight: 'bold',
-              boxShadow: `0 0 20px ${triggerInfo.color}66, inset 0 0 10px ${triggerInfo.color}22`,
-              animation: 'prompt-pulse 1.2s ease-in-out infinite',
-              textShadow: `0 0 8px ${triggerInfo.color}`,
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)',
+              pointerEvents: 'none',
+              zIndex: 15,
             }}
-          >
-            [{triggerInfo.label}] — ENTER para {triggerInfo.hint}
-          </div>
-        ) : (
-          <div
-            style={{
-              color: '#a1a1aa',
-              fontSize: '9px',
-              textShadow: '0 0 10px rgba(161,161,170,0.5)',
-              animation: 'explore-fade 2s ease-in-out infinite',
-            }}
-          >
-            ✦ Explora la habitación ✦
-          </div>
-        )}
-      </div>
+          />
 
-      {/* ── RPG Dialogue overlay ── */}
-      {dialogueProps && <RPGDialogue {...dialogueProps} />}
+          {/* Layer 5 — encounter fade (kept inside grid, z-index handled separately) */}
 
-      <style>{`
+          {/* Layer 6 — Fade-to-black for encounter transition */}
+          {fadeToBlack && (
+            <>
+              {/* Shake effect on the grid container */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  animation: 'encounter-shake 0.9s ease-in-out',
+                  pointerEvents: 'none',
+                  zIndex: 40,
+                }}
+              />
+              {/* White flash */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: '#fff',
+                  zIndex: 55,
+                  animation: 'encounter-flash 0.9s ease-out forwards',
+                }}
+              />
+              {/* Red glow border */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  border: '4px solid #dc2626',
+                  zIndex: 45,
+                  animation: 'encounter-red-glow 0.9s ease-in-out',
+                  pointerEvents: 'none',
+                }}
+              />
+              {/* Fade to black overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: '#000',
+                  zIndex: 50,
+                  animation: 'hub-fadeblack 0.9s ease-in forwards',
+                }}
+              />
+            </>
+          )}
+        </div>
+
+        {/* ── Trigger prompt strip ── */}
+        <div style={{ marginTop: 14, height: 32 }}>
+          {triggerInfo ? (
+            <div
+              style={{
+                padding: '8px 20px',
+                border: `2px solid ${triggerInfo.color}`,
+                color: triggerInfo.color,
+                fontSize: '9px',
+                fontWeight: 'bold',
+                boxShadow: `0 0 20px ${triggerInfo.color}66, inset 0 0 10px ${triggerInfo.color}22`,
+                animation: 'prompt-pulse 1.2s ease-in-out infinite',
+                textShadow: `0 0 8px ${triggerInfo.color}`,
+              }}
+            >
+              [{triggerInfo.label}] — ENTER para {triggerInfo.hint}
+            </div>
+          ) : (
+            <div
+              style={{
+                color: '#a1a1aa',
+                fontSize: '9px',
+                textShadow: '0 0 10px rgba(161,161,170,0.5)',
+                animation: 'explore-fade 2s ease-in-out infinite',
+              }}
+            >
+              ✦ Explora la habitación ✦
+            </div>
+          )}
+        </div>
+
+        <style>{`
         @keyframes desk-pulse {
           0%, 100% {
             opacity: 0.7;
@@ -617,6 +662,69 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
           50%      { box-shadow: 0 0 100px rgba(220,38,38,0.8), inset 0 0 100px rgba(220,38,38,0.5); }
         }
       `}</style>
+      </div>{/* end scaled wrapper */}
+
+      {/* ── Beast select panel (visual cards) ── */}
+      {dialogPhase === 'beast' && (
+        <BeastSelectDialogue
+          onSelect={(beastId) => handleBeastSelect({ id: beastId, label: beastId })}
+          onClose={() => setDialogPhase('confirm')}
+          playerEraIndex={eraIdx}
+          debugUnlockAll={debugUnlockAll}
+          width={`${Math.round(COLS * TILE * scale)}px`}
+        />
+      )}
+
+      {/* ── RPG Dialogue — outside scale so width matches scaled grid ── */}
+      {dialogueProps && dialogPhase !== 'beast' && (
+        <RPGDialogue
+          {...dialogueProps}
+          width={`${Math.round(COLS * TILE * scale)}px`}
+        />
+      )}
+
+      {/* ── Rest overlay — full screen ── */}
+      {restTransition && (
+        <>
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(2, 1, 4, 0.96)',
+            pointerEvents: restTransition === 'fade-out' ? 'all' : 'none',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 20,
+            fontFamily: '"Press Start 2P", monospace',
+            animation: restTransition === 'fade-out'
+              ? 'rest-overlay-in 1.8s ease-in-out forwards'
+              : 'rest-overlay-out 1.8s ease-in-out forwards',
+          }}>
+            <div style={{
+              fontSize: '11px', letterSpacing: '0.2em', lineHeight: 2,
+              color: '#d97706', maxWidth: 480, textAlign: 'center',
+              textShadow: '0 0 24px rgba(217,119,6,0.7)',
+              animation: restTransition === 'fade-out'
+                ? 'rest-text-in 2.4s ease-in-out forwards'
+                : 'rest-overlay-out 0.8s ease-in-out forwards',
+            }}>
+              {restMessage}
+            </div>
+            <div style={{
+              display: 'flex', gap: 10,
+              animation: restTransition === 'fade-out'
+                ? 'rest-text-in 2.6s ease-in-out forwards'
+                : 'rest-overlay-out 0.8s ease-in-out forwards',
+            }}>
+              {['◆', '◇', '◆'].map((s, i) => (
+                <span key={i} style={{ fontSize: 8, color: '#3d2817' }}>{s}</span>
+              ))}
+            </div>
+          </div>
+          <style>{`
+            @keyframes rest-overlay-in  { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes rest-overlay-out { from { opacity: 1; } to { opacity: 0; } }
+            @keyframes rest-text-in     { 0%, 35% { opacity: 0; } 100% { opacity: 1; } }
+          `}</style>
+        </>
+      )}
     </div>
   );
 }

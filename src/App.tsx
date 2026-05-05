@@ -10,6 +10,10 @@ type Screen = 'hub' | 'domains' | 'bestiary' | 'trophies';
 type AppPhase = 'title' | 'lore' | 'hub';
 type TitlePhase = 'enter' | 'idle' | 'exit';
 
+// ─── Lore timing — ms que dura cada subtítulo en pantalla ─────────────────────
+// Ajustá estos valores para sincronizar con el audio
+const LORE_DURATIONS = [5700, 9000, 9500, 12000];
+
 // ─── Lore lines ────────────────────────────────────────────────────────────────
 const LORE_LINES = [
   {
@@ -245,15 +249,86 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
   const [isTyping, setIsTyping] = useState(true);
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
-  const [blink, setBlink] = useState(true);
+  const [holdProgress, setHoldProgress] = useState(0);
   const fullText = LORE_LINES[lineIndex].text;
   const charRef = useRef(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const holdingRef = useRef(false);
+  const skippedRef = useRef(false);
 
+  // Fade in
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 50);
     return () => clearTimeout(t);
   }, []);
 
+  // Play narration and schedule auto-advance for each line
+  useEffect(() => {
+    const audio = new Audio('/sounds/narrador-lore.mp3');
+    audioRef.current = audio;
+    audio.play().catch(() => { });
+
+    let elapsed = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    LORE_DURATIONS.forEach((dur, i) => {
+      elapsed += dur;
+      if (i < LORE_DURATIONS.length - 1) {
+        timers.push(setTimeout(() => setLineIndex(i + 1), elapsed));
+      } else {
+        timers.push(setTimeout(() => {
+          setExiting(true);
+          setTimeout(onFinish, 800);
+        }, elapsed));
+      }
+    });
+
+    return () => {
+      timers.forEach(clearTimeout);
+      audio.pause();
+    };
+  }, [onFinish]);
+
+  // Hold spacebar to skip
+  useEffect(() => {
+    const HOLD_MS = 1500;
+    const TICK = 40;
+    let iv: ReturnType<typeof setInterval> | null = null;
+    let progress = 0;
+
+    const onDown = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || holdingRef.current || skippedRef.current) return;
+      holdingRef.current = true;
+      progress = 0;
+      iv = setInterval(() => {
+        progress += TICK / HOLD_MS;
+        setHoldProgress(Math.min(progress, 1));
+        if (progress >= 1) {
+          skippedRef.current = true;
+          clearInterval(iv!);
+          audioRef.current?.pause();
+          setExiting(true);
+          setTimeout(onFinish, 800);
+        }
+      }, TICK);
+    };
+
+    const onUp = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      holdingRef.current = false;
+      if (iv) clearInterval(iv);
+      setHoldProgress(0);
+    };
+
+    window.addEventListener('keydown', onDown);
+    window.addEventListener('keyup', onUp);
+    return () => {
+      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keyup', onUp);
+      if (iv) clearInterval(iv);
+    };
+  }, [onFinish]);
+
+  // Typewriter per line
   useEffect(() => {
     charRef.current = 0;
     setDisplayed('');
@@ -266,25 +341,6 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
     return () => clearInterval(iv);
   }, [lineIndex, fullText]);
 
-  useEffect(() => {
-    if (isTyping) return;
-    const iv = setInterval(() => setBlink(b => !b), 550);
-    return () => clearInterval(iv);
-  }, [isTyping]);
-
-  const advance = useCallback(() => {
-    if (isTyping) { setDisplayed(fullText); setIsTyping(false); return; }
-    if (lineIndex < LORE_LINES.length - 1) { setLineIndex(i => i + 1); setBlink(true); }
-    else { setExiting(true); setTimeout(onFinish, 800); }
-  }, [isTyping, lineIndex, fullText, onFinish]);
-
-  useEffect(() => {
-    const h = () => advance();
-    window.addEventListener('keydown', h);
-    window.addEventListener('click', h);
-    return () => { window.removeEventListener('keydown', h); window.removeEventListener('click', h); };
-  }, [advance]);
-
   return (
     <div
       className="min-h-screen flex flex-col relative select-none"
@@ -292,7 +348,6 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
         overflow: 'hidden',
         background: '#030204',
         fontFamily: '"Press Start 2P", monospace',
-        cursor: 'pointer',
         opacity: exiting ? 0 : (visible ? 1 : 0),
         transition: exiting ? 'opacity 0.8s ease-in' : 'opacity 0.6s ease-out',
       }}
@@ -366,24 +421,33 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
             <span style={{ color: '#5c2d0a', fontSize: 'clamp(14px, 2.5vw, 18px)', marginRight: 8, verticalAlign: 'top', lineHeight: 1 }}>❝</span>
             {displayed}
             {/* Typing cursor */}
-            <span style={{
-              display: 'inline-block', width: 10, height: 3,
-              background: '#d97706', marginLeft: 3, verticalAlign: 'middle',
-              opacity: isTyping ? 1 : (blink ? 1 : 0),
-              animation: isTyping ? 'cursor-blink 0.55s ease-in-out infinite' : 'none',
-            }} />
+            {isTyping && (
+              <span style={{
+                display: 'inline-block', width: 10, height: 3,
+                background: '#d97706', marginLeft: 3, verticalAlign: 'middle',
+                animation: 'cursor-blink 0.55s ease-in-out infinite',
+              }} />
+            )}
           </div>
+        </div>
+      </div>
 
-          {/* Advance hint */}
+      {/* ── Skip hint ────────────────────────────────────────────────── */}
+      <div style={{
+        position: 'fixed', bottom: 28, right: 28, zIndex: 20,
+        fontFamily: '"Press Start 2P", monospace',
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6,
+      }}>
+        <div style={{ fontSize: '7px', color: '#5c4a3d', letterSpacing: '0.1em' }}>
+          MANTÉN ESPACIO PARA SALTEAR
+        </div>
+        <div style={{ width: 160, height: 4, background: '#1a1008', border: '1px solid #2a1810' }}>
           <div style={{
-            fontSize: 'clamp(7px, 1vw, 9px)',
-            color: !isTyping && blink ? '#d97706' : 'transparent',
-            letterSpacing: '0.2em',
-            textShadow: '0 0 12px rgba(217,119,6,0.7)',
-            transition: 'color 0.15s',
-          }}>
-            {lineIndex < LORE_LINES.length - 1 ? 'CONTINUAR' : 'INICIAR RITUAL'} ▶▶
-          </div>
+            height: '100%',
+            width: `${holdProgress * 100}%`,
+            background: holdProgress > 0.7 ? '#d97706' : '#92400e',
+            transition: holdProgress === 0 ? 'width 0.15s ease-out' : 'none',
+          }} />
         </div>
       </div>
 
@@ -404,16 +468,69 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
 }
 
 // ─── App ───────────────────────────────────────────────────────────────────────
+const MUSIC_LORE_VOL = 0.18;
+
 function App() {
-  const { checkAndApplyWeeklyDebt, tutorialSeen } = useStore();
+  const { checkAndApplyWeeklyDebt, tutorialSeen, settings } = useStore();
   const [appPhase, setAppPhase] = useState<AppPhase>('title');
   const [currentScreen, setCurrentScreen] = useState<Screen>('hub');
   const [hubOpacity, setHubOpacity] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
+  const sfxVolRef = useRef(settings.sfxVol);
+
+  // Mantiene sfxVolRef sincronizado para el handler de click
+  useEffect(() => { sfxVolRef.current = settings.sfxVol; }, [settings.sfxVol]);
+
+  // Sincroniza volumen de música cuando cambia en settings
+  useEffect(() => {
+    if (musicRef.current && appPhase === 'hub') {
+      musicRef.current.volume = settings.musicVol;
+    }
+  }, [settings.musicVol, appPhase]);
 
   useEffect(() => {
     checkAndApplyWeeklyDebt();
   }, [checkAndApplyWeeklyDebt]);
+
+  // Click sound en cualquier botón
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('button')) {
+        const sfx = new Audio('/sounds/click-mouse.mp3');
+        sfx.volume = sfxVolRef.current;
+        sfx.play().catch(() => {});
+      }
+    };
+    window.addEventListener('click', handler);
+    return () => window.removeEventListener('click', handler);
+  }, []);
+
+  // Arranca la música cuando comienza el lore
+  useEffect(() => {
+    if (appPhase !== 'lore') return;
+    const audio = new Audio('/sounds/music-loop.mp3');
+    audio.loop = true;
+    audio.volume = MUSIC_LORE_VOL;
+    audio.play().catch(() => {});
+    musicRef.current = audio;
+    // sin cleanup: la música sigue cuando cambia la fase
+  }, [appPhase]);
+
+  // Sube el volumen gradualmente al entrar al hub
+  useEffect(() => {
+    if (appPhase !== 'hub' || !musicRef.current) return;
+    const audio = musicRef.current;
+    const target = settings.musicVol;
+    const iv = setInterval(() => {
+      if (audio.volume < target) {
+        audio.volume = Math.min(audio.volume + 0.005, target);
+      } else {
+        clearInterval(iv);
+      }
+    }, 60);
+    return () => clearInterval(iv);
+  }, [appPhase, settings.musicVol]);
 
   // Auto-show tutorial for new users once hub is visible
   useEffect(() => {

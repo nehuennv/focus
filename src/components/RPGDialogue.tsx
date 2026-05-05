@@ -14,6 +14,8 @@ interface RPGDialogueProps {
   onClose?: () => void;
   /** ms per character. Default 28 */
   typewriterSpeed?: number;
+  /** Override dialog width (e.g. to match scaled hub grid) */
+  width?: string | number;
 }
 
 export function RPGDialogue({
@@ -23,6 +25,7 @@ export function RPGDialogue({
   onSelect,
   onClose,
   typewriterSpeed = 28,
+  width,
 }: RPGDialogueProps) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
@@ -111,7 +114,7 @@ export function RPGDialogue({
         bottom: 0,
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '840px',
+        width: width ?? '840px',
         maxWidth: 'calc(100% - 40px)',
         zIndex: 200,
         fontFamily: '"Press Start 2P", monospace',

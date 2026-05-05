@@ -64,52 +64,52 @@ export interface EraConfig {
 
 export const ERAS: EraConfig[] = [
   {
-    index: 0, name: 'Novicio',        icon: '📜',
+    index: 0, name: 'Novicio', icon: '📜',
     color: '#9ca3af', border: '#374151', bg: '#060608', glow: 'rgba(156,163,175,0.15)',
-    startMins: 0,      minsPerRank: 50,
+    startMins: 0, minsPerRank: 50,
   },
   {
-    index: 1, name: 'Iniciado',       icon: '🕯️',
+    index: 1, name: 'Iniciado', icon: '🕯️',
     color: '#d1d5db', border: '#6b7280', bg: '#080808', glow: 'rgba(209,213,219,0.15)',
-    startMins: 500,    minsPerRank: 100,
+    startMins: 500, minsPerRank: 100,
   },
   {
-    index: 2, name: 'Guerrero',       icon: '⚔️',
+    index: 2, name: 'Guerrero', icon: '⚔️',
     color: '#4ade80', border: '#14532d', bg: '#000f05', glow: 'rgba(74,222,128,0.15)',
-    startMins: 1500,   minsPerRank: 250,
+    startMins: 1500, minsPerRank: 250,
   },
   {
-    index: 3, name: 'Cazador',        icon: '🏹',
+    index: 3, name: 'Cazador', icon: '🏹',
     color: '#60a5fa', border: '#1e3a5f', bg: '#00050f', glow: 'rgba(96,165,250,0.15)',
-    startMins: 4000,   minsPerRank: 500,
+    startMins: 4000, minsPerRank: 500,
   },
   {
-    index: 4, name: 'Paladín',        icon: '🛡️',
+    index: 4, name: 'Paladín', icon: '🛡️',
     color: '#fbbf24', border: '#92400e', bg: '#0f0800', glow: 'rgba(251,191,36,0.15)',
-    startMins: 9000,   minsPerRank: 1100,
+    startMins: 9000, minsPerRank: 1100,
   },
   {
-    index: 5, name: 'Conjurador',     icon: '🔮',
+    index: 5, name: 'Conjurador', icon: '🔮',
     color: '#c084fc', border: '#581c87', bg: '#0a000f', glow: 'rgba(192,132,252,0.15)',
-    startMins: 20000,  minsPerRank: 2000,
+    startMins: 20000, minsPerRank: 2000,
   },
   {
     index: 6, name: 'Señor de Guerra', icon: '⚡',
     color: '#f87171', border: '#7f1d1d', bg: '#0f0000', glow: 'rgba(248,113,113,0.15)',
-    startMins: 40000,  minsPerRank: 4000,
+    startMins: 40000, minsPerRank: 4000,
   },
   {
-    index: 7, name: 'Archimago',      icon: '🧙',
+    index: 7, name: 'Archimago', icon: '🧙',
     color: '#a78bfa', border: '#4c1d95', bg: '#050010', glow: 'rgba(167,139,250,0.2)',
-    startMins: 80000,  minsPerRank: 6000,
+    startMins: 80000, minsPerRank: 6000,
   },
   {
-    index: 8, name: 'Leyenda',        icon: '👑',
+    index: 8, name: 'Leyenda', icon: '👑',
     color: '#fde047', border: '#854d0e', bg: '#0f0800', glow: 'rgba(253,224,71,0.2)',
     startMins: 140000, minsPerRank: 8000,
   },
   {
-    index: 9, name: 'Inmortal',       icon: '💀',
+    index: 9, name: 'Inmortal', icon: '💀',
     color: '#f8fafc', border: '#4a4a5a', bg: '#060610', glow: 'rgba(248,250,252,0.25)',
     startMins: 220000, minsPerRank: 13000,
   },
@@ -130,21 +130,21 @@ export const calculateRankIndex = (totalMins: number): number => {
 };
 
 export const getRankProgress = (totalMins: number) => {
-  const rankIndex  = calculateRankIndex(totalMins);
-  const eraIdx     = Math.floor(rankIndex / 10);
-  const rankInEra  = rankIndex % 10;
-  const era        = ERAS[Math.min(eraIdx, ERAS.length - 1)];
-  const rankStart  = era.startMins + rankInEra * era.minsPerRank;
-  const rankEnd    = rankStart + era.minsPerRank;
-  const isAbsMax   = rankIndex === 99 && totalMins >= rankEnd;
-  const progress   = isAbsMax ? 100 : Math.min(100, ((totalMins - rankStart) / era.minsPerRank) * 100);
+  const rankIndex = calculateRankIndex(totalMins);
+  const eraIdx = Math.floor(rankIndex / 10);
+  const rankInEra = rankIndex % 10;
+  const era = ERAS[Math.min(eraIdx, ERAS.length - 1)];
+  const rankStart = era.startMins + rankInEra * era.minsPerRank;
+  const rankEnd = rankStart + era.minsPerRank;
+  const isAbsMax = rankIndex === 99 && totalMins >= rankEnd;
+  const progress = isAbsMax ? 100 : Math.min(100, ((totalMins - rankStart) / era.minsPerRank) * 100);
   return { rankIndex, eraIdx, rankInEra: rankInEra + 1, era, rankStart, rankEnd, progress, isAbsMax };
 };
 
 export const getRankDisplay = (rankIndex: number) => {
-  const eraIdx    = Math.floor(rankIndex / 10);
+  const eraIdx = Math.floor(rankIndex / 10);
   const rankInEra = rankIndex % 10;
-  const era       = ERAS[Math.min(eraIdx, ERAS.length - 1)];
+  const era = ERAS[Math.min(eraIdx, ERAS.length - 1)];
   return {
     era,
     rankInEra: rankInEra + 1,
@@ -180,11 +180,17 @@ export interface FocusStore {
   ritualSessions: RitualSession[];
   lastSyncDate: number;
   tutorialSeen: boolean;
+  isDay: boolean;
+  settings: { musicVol: number; sfxVol: number; hubScale: number };
+  debugUnlockAll: boolean;
 
   createDomain: (name: string, weeklyTargetMins: number, beastId: string) => void;
   completeRitual: (domainId: string, beastId: string, mins: number) => void;
   checkAndApplyWeeklyDebt: () => void;
   setTutorialSeen: (seen: boolean) => void;
+  setIsDay: (isDay: boolean) => void;
+  setSettings: (patch: Partial<FocusStore['settings']>) => void;
+  setDebugUnlockAll: (v: boolean) => void;
 }
 
 // ─── Achievement Definitions ──────────────────────────────────────────────────
@@ -498,44 +504,67 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 // ─── Bestiary Data ────────────────────────────────────────────────────────────
 
 export const BEASTS = {
-  albedo:   { id: 'albedo',   name: 'Albedo',   lore: 'El Erudito de las Mil Tintas. Maestro del conocimiento ancestral.',        spriteImg: 'img/pixeladas/albedo.png',   bgImg: 'img/pixeladas/albedoBg.png'   },
-  alberic:  { id: 'alberic',  name: 'Alberic',  lore: 'El Caballero Dorado. Guardián de la paciencia y la disciplina.',           spriteImg: 'img/pixeladas/alberic.png',  bgImg: 'img/pixeladas/albericBg.png'  },
-  aurelian: { id: 'aurelian', name: 'Aurelian', lore: 'El Emperador Inmortal. Soberano de la voluntad inquebrantable.',           spriteImg: 'img/pixeladas/aurelian.png', bgImg: 'img/pixeladas/aurelianBg.png' },
-  horrax:   { id: 'horrax',   name: 'Horrax',   lore: 'El Devorador de Mundos. Terror cósmico sin igual.',                       spriteImg: 'img/pixeladas/horrax.png',   bgImg: 'img/pixeladas/horraxBg.png'   },
-  kaelen:   { id: 'kaelen',   name: 'Kaelen',   lore: 'El Cazador Eterno. Persigue a sus presas sin descanso.',                  spriteImg: 'img/pixeladas/kaelen.png',   bgImg: 'img/pixeladas/kaelenBg.png'   },
-  lysandra: { id: 'lysandra', name: 'Lysandra', lore: 'La Hechicera de Cristal. Tejedora de ilusiones mortales.',                spriteImg: 'img/pixeladas/lysandra.png', bgImg: 'img/pixeladas/lysandraBg.png' },
-  maro:     { id: 'maro',     name: 'Maro',     lore: 'El Arquitecto Olvidado. Constructor de laberintos infinitos.',             spriteImg: 'img/pixeladas/maro.png',     bgImg: 'img/pixeladas/maroBg.png'     },
-  morwenna: { id: 'morwenna', name: 'Morwenna', lore: 'La Bruja del Páramo. Señora de las tormentas y la niebla.',               spriteImg: 'img/pixeladas/morwenna.png', bgImg: 'img/pixeladas/morwennaBg.png' },
-  nyr:      { id: 'nyr',      name: 'Nyr',      lore: 'El Mensajero del Vacío. Portador de secretos prohibidos.',                spriteImg: 'img/pixeladas/nyr.png',      bgImg: 'img/pixeladas/nyrBg.png'      },
-  thereon:  { id: 'thereon',  name: 'Thereon',  lore: 'El Cambiaformas. Entidad de mil rostros y un solo propósito.',            spriteImg: 'img/pixeladas/thereon.png',  bgImg: 'img/pixeladas/thereonBg.png'  },
-  vesper:   { id: 'vesper',   name: 'Vesper',   lore: 'La Sombra del Ocaso. Maestra de las artes ocultas.',                     spriteImg: 'img/pixeladas/vesper.png',   bgImg: 'img/pixeladas/vesperBg.png'   },
+  // floats: true  → flota en el aire (animación float)
+  // floats: false → fijo en el suelo (animación de respiro sutil)
+  // scale: tamaño relativo en combate (1.0 = base ~260px). Editá libremente.
+  albedo: { id: 'albedo', name: 'Albedo', fullName: 'Albedo, la Musa Fragmentada', color: '#8b6a3e', floats: true, scale: 1.0, spriteImg: 'img/pixeladas/albedo.png', bgImg: 'img/originales/albedoBg.png', lore: 'Albedo es el naufragio de la identidad. Fue el espejo donde otros se vieron reflejados, hasta que se pulverizó bajo el peso de las expectativas ajenas. No tiene forma porque se la dieron toda, y en el proceso, no le dejaron nada. Su silueta es un torbellino de rostros prestados, un coro de voces que ahogan la propia.' },
+  alberic: { id: 'alberic', name: 'Alberic', fullName: 'Alberic, el Escriba sin Rostro', color: '#8b6a3e', floats: true, scale: 1.1, spriteImg: 'img/pixeladas/alberic.png', bgImg: 'img/originales/albericBg.png', lore: 'Alberic creyó que el conocimiento era un fin en sí mismo. Devoró bibliotecas enteras, acumulando sabiduría como un avaro acumula oro, hasta que el peso de lo inútil le arrancó el rostro y la identidad. Es el monumento a la procrastinación intelectual, al que prefiere el mapa antes que el territorio.' },
+  aurelian: { id: 'aurelian', name: 'Aurelian', fullName: 'Aurelian, el Juez Saliente', color: '#4a5e58', floats: false, scale: 1.3, spriteImg: 'img/pixeladas/aurelian.png', bgImg: 'img/originales/aurelianBg.png', lore: 'Aurelian es el eco internalizado de cada "no eres suficiente". No juzga con una espada, sino con el silencio ensordecedor de la autocrítica convertida en verdugo. Su espejo no miente, pero solo muestra la herida, nunca la cura. Es el miedo a ser descubierto como un fraude, hecho carne.' },
+  horrax: { id: 'horrax', name: 'Horrax', fullName: 'Horrax, el Vástago de la Escoria', color: '#7a3a1e', floats: false, scale: 1.45, spriteImg: 'img/pixeladas/horrax.png', bgImg: 'img/originales/horraxBg.png', lore: 'Horrax no fue derrotado por un enemigo, sino por el yunque de su propia obsesión. Forjó su voluntad en una disciplina de hierro, martillando sin pausa hasta que solo quedó la escoria de lo que pudo ser un hombre. Es la encarnación de la autoexplotación, la crítica feroz a una cultura que venera el esfuerzo infinito.' },
+  kaelen: { id: 'kaelen', name: 'Kaelen', fullName: 'Kaelen, el Indeciso', color: '#6a6a6a', floats: false, scale: 0.85, spriteImg: 'img/pixeladas/kaelen.png', bgImg: 'img/originales/kaelenBg.png', lore: 'Kaelen es el cementerio de las posibilidades. Su tragedia no es la falta de potencial, sino la maldición de verlo todo y atreverse con nada. Cada camino no tomado le creció un brazo fantasma. Es la parálisis por análisis, el miedo a elegir y equivocarse, hecho un hombre-spectro.' },
+  lysandra: { id: 'lysandra', name: 'Lysandra', fullName: 'Lysandra, la Vidente Estancada', color: '#2a8a9a', floats: true, scale: 1.05, spriteImg: 'img/pixeladas/lysandra.png', bgImg: 'img/originales/lysandraBg.png', lore: 'Lysandra no vive en el tiempo, es el tiempo quien vive en ella. Un río de ayeres y mañanas que la ahoga, impidiéndole habitar el único instante real: el ahora. Es la parálisis de la hiperconsciencia, la maldición de ver demasiados caminos y no poder pisar ninguno.' },
+  maro: { id: 'maro', name: 'Maro', fullName: 'Maro, el Bufón Dorado', color: '#c8a020', floats: true, scale: 0.8, spriteImg: 'img/pixeladas/maro.png', bgImg: 'img/originales/maroBg.png', lore: 'Maro es el susurro seductor de la distracción. No roba la vida con un cuchillo, sino con una promesa vacía de diversión eterna. Su oro es falso, su risa un cascabel que anestesia el alma. Es la crítica a la gratificación instantánea, al desplazamiento infinito que nos aleja del propósito.' },
+  morwenna: { id: 'morwenna', name: 'Morwenna', fullName: 'Morwenna, Madre de los Brotes Marchitos', color: '#8a7a1a', floats: false, scale: 1.0, spriteImg: 'img/pixeladas/morwenna.png', bgImg: 'img/originales/morwennaBg.png', lore: 'Morwenna es el jardín de los comienzos abortados. Cada sueño postergado, cada talento abandonado por miedo o pereza, hizo que una de sus flores se pudriera en el tallo. No es la muerte, es algo peor: la lenta necrosis del potencial.' },
+  nyr: { id: 'nyr', name: 'Nyr', fullName: 'Nyr, el Santo Encadenado', color: '#7a8a9a', floats: false, scale: 1.0, spriteImg: 'img/pixeladas/nyr.png', bgImg: 'img/originales/nyrBg.png', lore: 'Nyr es la bondad convertida en patología. Se entregó tanto a las causas ajenas que olvidó cómo tener una propia. Sus cadenas no son de metal, son de expectativas y deudas emocionales. Su martirio no es sagrado, es un recordatorio de que el servicio debe nacer de la plenitud, no del vacío.' },
+  thereon: { id: 'thereon', name: 'Thereon', fullName: 'Thereon, el Eco de la Perfección', color: '#3a8068', floats: true, scale: 1.15, spriteImg: 'img/pixeladas/thereon.png', bgImg: 'img/originales/thereonBg.png', lore: 'Thereon es el vacío que queda tras perseguir un espejismo. Nació de la comparación y se alimenta de la insatisfacción. Sus máscaras no son para esconderse, son desesperados intentos de encontrar un rostro que no le pertenece. Es la personificación del síndrome del impostor.' },
+  vesper: { id: 'vesper', name: 'Vesper', fullName: 'Vesper, el Festín Vacío', color: '#3a6a9a', floats: true, scale: 1.2, spriteImg: 'img/pixeladas/vesper.png', bgImg: 'img/originales/vesperBg.png', lore: 'Vesper es el hambre que persiste después del banquete. Gobernó la noche, creyendo que la validación externa podría llenar el vacío interno. Cada brindis fue un clavo en su ataúd de ébano. Es el cadáver de la fiesta, el espectro del "qué dirán" que sacrifica la autenticidad.' },
 };
+
+// ─── Beast Unlock Order ───────────────────────────────────────────────────────
+// Reorder entries freely to change which boss unlocks first or last.
+// eraIndex: 0 = Era I Novicio (libre), 1 = Era II Iniciado, 2 = Era III Guerrero, etc.
+export const BEAST_UNLOCK_ORDER: Array<{ beastId: keyof typeof BEASTS; eraIndex: number }> = [
+  { beastId: 'maro', eraIndex: 0 },  // Era I   — Novicio       (libre desde el inicio)
+  { beastId: 'albedo', eraIndex: 0 },  // Era I   — Novicio
+  { beastId: 'kaelen', eraIndex: 1 },  // Era II  — Iniciado
+  { beastId: 'morwenna', eraIndex: 1 },  // Era II  — Iniciado
+  { beastId: 'alberic', eraIndex: 2 },  // Era III — Guerrero
+  { beastId: 'nyr', eraIndex: 2 },  // Era III — Guerrero
+  { beastId: 'lysandra', eraIndex: 3 },  // Era IV  — Cazador
+  { beastId: 'aurelian', eraIndex: 4 },  // Era V   — Paladín
+  { beastId: 'thereon', eraIndex: 5 },  // Era VI  — Conjurador
+  { beastId: 'vesper', eraIndex: 6 },  // Era VII — Señor de Guerra
+  { beastId: 'horrax', eraIndex: 7 },  // Era VIII — Archimago
+];
+
+export const getBeastEraRequirement = (beastId: string): number =>
+  BEAST_UNLOCK_ORDER.find(b => b.beastId === beastId)?.eraIndex ?? 0;
+
+export const isBeastUnlocked = (beastId: string, playerEraIndex: number, forceUnlock = false): boolean =>
+  forceUnlock || playerEraIndex >= getBeastEraRequirement(beastId);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Returns the timestamp of Monday 00:00:00.000 for the week that contains `date`.
+// Works correctly for every day including Monday itself (day=1 → diff=0).
+const getMondayMidnight = (date: Date): number => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  // getDay(): 0=Sun 1=Mon 2=Tue … 6=Sat
+  // We want to subtract back to Monday: Sun→-6, Mon→0, Tue→-1, …
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.getTime();
+};
+
+// How many full weeks (Monday-to-Monday boundaries) have elapsed since lastSyncDate.
+// Because lastSyncDate is always stored as a Monday midnight, this is a clean integer division.
 const getWeeksPassed = (lastSyncDate: number): number => {
-  const now = new Date();
-  const lastSync = new Date(lastSyncDate);
-
-  const getLastMondayBefore = (date: Date): Date => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const daysToSubtract = day === 1 ? 7 : (day === 0 ? 6 : day - 1);
-    d.setDate(d.getDate() - daysToSubtract);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  let lastMonday = getLastMondayBefore(lastSync);
-  let weeksCount = 0;
-  let checkDate = new Date(lastMonday);
-
-  while (checkDate <= now) {
-    if (checkDate > lastSync) weeksCount++;
-    checkDate.setDate(checkDate.getDate() + 7);
-  }
-
-  return weeksCount;
+  const last = getMondayMidnight(new Date(lastSyncDate));
+  const now  = getMondayMidnight(new Date());
+  const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+  return Math.max(0, Math.round((now - last) / MS_PER_WEEK));
 };
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -555,24 +584,30 @@ export const useStore = create<FocusStore>()(
     (set) => ({
       player: INITIAL_PLAYER,
       domains: [],
+      isDay: false,
       bestiary: [
-        { beastId: 'albedo',   name: 'Albedo',   defeats: 0, totalMinsDefeated: 0 },
-        { beastId: 'alberic',  name: 'Alberic',  defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'albedo', name: 'Albedo', defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'alberic', name: 'Alberic', defeats: 0, totalMinsDefeated: 0 },
         { beastId: 'aurelian', name: 'Aurelian', defeats: 0, totalMinsDefeated: 0 },
-        { beastId: 'horrax',   name: 'Horrax',   defeats: 0, totalMinsDefeated: 0 },
-        { beastId: 'kaelen',   name: 'Kaelen',   defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'horrax', name: 'Horrax', defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'kaelen', name: 'Kaelen', defeats: 0, totalMinsDefeated: 0 },
         { beastId: 'lysandra', name: 'Lysandra', defeats: 0, totalMinsDefeated: 0 },
-        { beastId: 'maro',     name: 'Maro',     defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'maro', name: 'Maro', defeats: 0, totalMinsDefeated: 0 },
         { beastId: 'morwenna', name: 'Morwenna', defeats: 0, totalMinsDefeated: 0 },
-        { beastId: 'nyr',      name: 'Nyr',      defeats: 0, totalMinsDefeated: 0 },
-        { beastId: 'thereon',  name: 'Thereon',  defeats: 0, totalMinsDefeated: 0 },
-        { beastId: 'vesper',   name: 'Vesper',   defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'nyr', name: 'Nyr', defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'thereon', name: 'Thereon', defeats: 0, totalMinsDefeated: 0 },
+        { beastId: 'vesper', name: 'Vesper', defeats: 0, totalMinsDefeated: 0 },
       ],
       ritualSessions: [],
-      lastSyncDate: Date.now(),
+      lastSyncDate: getMondayMidnight(new Date()),
       tutorialSeen: false,
+      settings: { musicVol: 0.42, sfxVol: 0.6, hubScale: 1.0 },
+      debugUnlockAll: false,
 
       setTutorialSeen: (seen) => set({ tutorialSeen: seen }),
+      setIsDay: (isDay) => set({ isDay }),
+      setSettings: (patch) => set(s => ({ settings: { ...s.settings, ...patch } })),
+      setDebugUnlockAll: (v) => set({ debugUnlockAll: v }),
 
       createDomain: (name, weeklyTargetMins, beastId) => {
         const beast = BEASTS[beastId as keyof typeof BEASTS];
@@ -608,18 +643,18 @@ export const useStore = create<FocusStore>()(
           const domain = state.domains.find((d) => d.id === domainId);
           if (!domain) return state;
 
-          const newDebtMins    = Math.max(0, domain.currentDebtMins - mins);
-          const wasDefeated    = domain.isDefeated;
-          const isNowDefeated  = newDebtMins <= 0;
-          const bossDefeated   = isNowDefeated && !wasDefeated;
+          const newDebtMins = Math.max(0, domain.currentDebtMins - mins);
+          const wasDefeated = domain.isDefeated;
+          const isNowDefeated = newDebtMins <= 0;
+          const bossDefeated = isNowDefeated && !wasDefeated;
 
           const updatedBestiary = state.bestiary.map((entry) =>
             entry.beastId === beastId
               ? {
-                  ...entry,
-                  defeats: bossDefeated ? entry.defeats + 1 : entry.defeats,
-                  totalMinsDefeated: entry.totalMinsDefeated + mins,
-                }
+                ...entry,
+                defeats: bossDefeated ? entry.defeats + 1 : entry.defeats,
+                totalMinsDefeated: entry.totalMinsDefeated + mins,
+              }
               : entry
           );
 
@@ -630,9 +665,9 @@ export const useStore = create<FocusStore>()(
           );
 
           const newTotalAccumulatedMins = state.player.totalAccumulatedMins + mins;
-          const xpGained  = calculateXpGain(mins, bossDefeated);
-          const newXp     = state.player.xp + xpGained;
-          const newRank   = calculateRankIndex(newTotalAccumulatedMins);
+          const xpGained = calculateXpGain(mins, bossDefeated);
+          const newXp = state.player.xp + xpGained;
+          const newRank = calculateRankIndex(newTotalAccumulatedMins);
 
           const updatedSessions = [
             ...state.ritualSessions,
@@ -664,15 +699,18 @@ export const useStore = create<FocusStore>()(
       checkAndApplyWeeklyDebt: () => {
         set((state) => {
           const weeksPassed = getWeeksPassed(state.lastSyncDate);
-          if (weeksPassed <= 0) return state;
+          // Always write the current Monday midnight so subsequent calls this week return 0
+          const nextSyncDate = getMondayMidnight(new Date());
+          if (weeksPassed <= 0) return { ...state, lastSyncDate: nextSyncDate };
 
           return {
+            ...state,
             domains: state.domains.map((domain) => ({
               ...domain,
               currentDebtMins: domain.currentDebtMins + domain.weeklyTargetMins * weeksPassed,
               isDefeated: false,
             })),
-            lastSyncDate: Date.now(),
+            lastSyncDate: nextSyncDate,
           };
         });
       },

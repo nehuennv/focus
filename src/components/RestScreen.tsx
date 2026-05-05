@@ -9,6 +9,7 @@ const fmt = (s: number) =>
 
 export function RestScreen({ onFinish }: RestScreenProps) {
   const [timeLeft, setTimeLeft] = useState(300);
+  const [hasExtended, setHasExtended] = useState(false);
 
   const playBonefireSound = () => {
     const audio = new Audio(`${import.meta.env.BASE_URL}sounds/bonefire.mp3`);
@@ -110,14 +111,23 @@ export function RestScreen({ onFinish }: RestScreenProps) {
       {/* Buttons */}
       <div className="flex gap-4">
         <button
+          disabled={hasExtended}
           onClick={() => {
+            if (hasExtended) return;
+            setHasExtended(true);
             setTimeLeft(prev => prev + 300);
             playBonefireSound();
           }}
           className="btn-pixel text-[8px] px-5 py-3"
-          style={{ borderColor: '#14532d', background: '#05150a', color: '#4ade80' }}
+          style={{
+            borderColor: hasExtended ? '#1a1a1a' : '#14532d',
+            background: hasExtended ? '#050505' : '#05150a',
+            color: hasExtended ? '#2a2a2a' : '#4ade80',
+            cursor: hasExtended ? 'not-allowed' : 'pointer',
+            opacity: hasExtended ? 0.5 : 1,
+          }}
         >
-          + 5 MIN
+          {hasExtended ? '✓ EXTENDIDO' : '+ 5 MIN'}
         </button>
         <button
           onClick={onFinish}
