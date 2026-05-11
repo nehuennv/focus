@@ -51,6 +51,8 @@ export function Encounter({ onBack }: EncounterProps) {
   const localAttackSecsRef = useRef(dailySession?.remainingAttackSecs ?? 0);
   const [flashOn, setFlashOn] = useState(true);
   const [timerFlash, setTimerFlash] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
   const [entrancePhase, setEntrancePhase] = useState<'bg' | 'boss' | 'ui' | 'done'>('bg');
   const [confirmModal, setConfirmModal] = useState<{ type: 'back' | 'flee'; message: string } | null>(null);
   const [exiting, setExiting] = useState(false);
@@ -68,6 +70,7 @@ export function Encounter({ onBack }: EncounterProps) {
     if (dailySession?.phase !== 'attacking') return;
 
     const iv = setInterval(() => {
+      if (isPausedRef.current) return;
       setLocalAttackSecs(s => {
         const next = s - 1;
         localAttackSecsRef.current = next;
@@ -110,20 +113,25 @@ export function Encounter({ onBack }: EncounterProps) {
   const bossColor = beast?.color ?? '#888888';
   const isAttacking = dailySession.phase === 'attacking';
 
-  // ── Boss HP bar (always red, always depleting) ──────────────────────────────
+  // ── Boss HP bar — total always = daily target, segments relative to it ──────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
   const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
+  const T = domainDailyTargetMins;
 
-  // Idle: remaining = target - already done - currently charged
-  // Attack: remaining = localAttackSecs / chargedSecs of THIS attack (100%→0%)
-  const bossHpPct = domainDailyTargetMins > 0
-    ? isAttacking && dailySession.chargedSecs > 0
-      ? Math.max(0, (localAttackSecs / dailySession.chargedSecs) * 100)
-      : Math.max(0, Math.min(100, ((domainDailyTargetMins - domainTodayBase - chargedMins) / domainDailyTargetMins) * 100))
-    : 0;
+  // pct helpers relative to total target
+  const toPct = (mins: number) => T > 0 ? Math.min(100, Math.max(0, (mins / T) * 100)) : 0;
+
+  // already spent (prev sessions today)
+  const spentPct = toPct(domainTodayBase);
+  // elapsed in current attack (grows second by second)
+  const attackElapsedMins = isAttacking ? (dailySession.chargedSecs - localAttackSecs) / 60 : 0;
+  const elapsedPct = toPct(domainTodayBase + attackElapsedMins);
+  // committed = full charge (endpoint marker)
+  const committedMins = isAttacking ? dailySession.chargedSecs / 60 : chargedMins;
+  const markerPct = toPct(domainTodayBase + committedMins);
 
   const domainTodayTotal = domainTodayBase + chargedMins;
-  const domainComplete = domainDailyTargetMins > 0 && domainTodayBase >= domainDailyTargetMins;
+  const domainComplete = T > 0 && domainTodayBase >= T;
 
   const handleLaunchAttack = () => {
     if (chargedMins <= 0) return;
@@ -154,7 +162,14 @@ export function Encounter({ onBack }: EncounterProps) {
     localAttackSecsRef.current = 0;
     setChargedMins(0);
     setShowExtendPrompt(false);
+    isPausedRef.current = false;
+    setIsPaused(false);
     updateDailySession({ phase: 'idle', chargedSecs: 0, remainingAttackSecs: 0 });
+  };
+
+  const handleTogglePause = () => {
+    isPausedRef.current = !isPausedRef.current;
+    setIsPaused(p => !p);
   };
 
   if (dailySession.phase === 'resting') {
@@ -384,32 +399,57 @@ export function Encounter({ onBack }: EncounterProps) {
             </div>
           </div>
 
-          {/* Boss HP bar — always red, depletes as you charge and as timer runs */}
+          {/* Boss HP bar — total = daily target, fills segment by segment */}
           {domain && domain.dailyTargetHours > 0 && (
             <div style={{ marginBottom: 14 }}>
               <div className="flex justify-between items-center" style={{ marginBottom: 5 }}>
                 <span style={{ fontSize: 9, color: '#ef4444', letterSpacing: '0.12em' }}>VIDA</span>
-                <span style={{ fontSize: 9, color: '#ef4444' }}>
-                  {isAttacking ? fmt(localAttackSecs) : `${fmtMins(domainDailyTargetMins - domainTodayBase - chargedMins)} restante`}
+                <span style={{ fontSize: 9, color: '#9f3030' }}>
+                  {fmtMins(domainTodayBase + attackElapsedMins)} / {fmtMins(T)}
+                  {committedMins > 0 && !isAttacking && (
+                    <span style={{ color: '#7f1d1d', marginLeft: 6 }}>+{fmtMins(committedMins)}</span>
+                  )}
                 </span>
               </div>
-              <div style={{ position: 'relative', height: 14, background: 'rgba(0,0,0,0.5)', border: '2px solid rgba(200,30,30,0.6)', overflow: 'hidden' }}>
-                <div style={{
-                  position: 'absolute', left: 0, top: 0, height: '100%',
-                  width: `${bossHpPct}%`,
-                  background: 'linear-gradient(to right,#7f1d1d,#dc2626)',
-                  transition: isAttacking ? 'width 1s linear' : 'width 0.3s ease',
-                }} />
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.3) calc(10% - 1px), rgba(0,0,0,0.3) 10%)', pointerEvents: 'none' }} />
+              <div style={{ position: 'relative', height: 16, background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(120,20,20,0.7)', overflow: 'visible' }}>
+                {/* already spent (dark red) */}
+                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${spentPct}%`, background: '#3f0a0a' }} />
+                {/* elapsed this attack (bright red, real-time) */}
+                {isAttacking && (
+                  <div style={{ position: 'absolute', left: `${spentPct}%`, top: 0, height: '100%', width: `${elapsedPct - spentPct}%`, background: 'linear-gradient(to right,#991b1b,#ef4444)', transition: 'width 1s linear' }} />
+                )}
+                {/* charge preview in idle (dim red) */}
+                {!isAttacking && chargedMins > 0 && (
+                  <div style={{ position: 'absolute', left: `${spentPct}%`, top: 0, height: '100%', width: `${markerPct - spentPct}%`, background: 'rgba(185,28,28,0.45)', transition: 'width 0.3s ease' }} />
+                )}
+                {/* marker line = endpoint of this attack */}
+                {markerPct > 0 && markerPct < 100 && (
+                  <div style={{ position: 'absolute', left: `${markerPct}%`, top: -3, bottom: -3, width: 3, background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.8)', transform: 'translateX(-50%)' }} />
+                )}
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.25) calc(10% - 1px), rgba(0,0,0,0.25) 10%)', pointerEvents: 'none' }} />
               </div>
             </div>
           )}
 
           {/* Controls */}
           {isAttacking ? (
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-3">
               <div style={{ height: 1, flex: 1, background: 'linear-gradient(to right, transparent, rgba(220,38,38,0.6))' }} />
-              <span style={{ fontSize: 10, color: '#ef4444', letterSpacing: '0.15em', textShadow: '0 0 12px rgba(220,38,38,0.5)' }}>⚔  RITUAL ACTIVO</span>
+              <button
+                onClick={handleTogglePause}
+                style={{
+                  border: `2px solid ${isPaused ? 'rgba(251,191,36,0.7)' : 'rgba(120,80,40,0.5)'}`,
+                  background: isPaused ? 'rgba(80,50,0,0.6)' : 'rgba(15,8,4,0.55)',
+                  color: isPaused ? '#fbbf24' : '#c8a87a',
+                  fontSize: 10, padding: '7px 14px',
+                  fontFamily: '"Press Start 2P", monospace',
+                  cursor: 'pointer', letterSpacing: '0.05em',
+                  backdropFilter: 'blur(4px)',
+                  animation: isPaused ? 'blood-throb 1.5s ease-in-out infinite' : 'none',
+                }}
+              >
+                {isPaused ? '▶ REANUDAR' : '⏸ PAUSA'}
+              </button>
               <div style={{ height: 1, flex: 1, background: 'linear-gradient(to left, transparent, rgba(220,38,38,0.6))' }} />
             </div>
           ) : (
