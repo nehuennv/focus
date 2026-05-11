@@ -50,6 +50,7 @@ export function Encounter({ onBack }: EncounterProps) {
   const [localAttackSecs, setLocalAttackSecs] = useState(() => dailySession?.remainingAttackSecs ?? 0);
   const localAttackSecsRef = useRef(dailySession?.remainingAttackSecs ?? 0);
   const [flashOn, setFlashOn] = useState(true);
+  const [timerFlash, setTimerFlash] = useState(false);
   const [entrancePhase, setEntrancePhase] = useState<'bg' | 'boss' | 'ui' | 'done'>('bg');
   const [confirmModal, setConfirmModal] = useState<{ type: 'back' | 'flee'; message: string } | null>(null);
   const [exiting, setExiting] = useState(false);
@@ -110,22 +111,16 @@ export function Encounter({ onBack }: EncounterProps) {
   const isAttacking = dailySession.phase === 'attacking';
 
   // ── HOY bar (the only progress bar) ────────────────────────────────────────
-  const attackElapsedMins = isAttacking ? (dailySession.chargedSecs - localAttackSecs) / 60 : 0;
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
-  const domainTodayTotal = domainTodayBase + attackElapsedMins;
+  // During attack: show committed amount immediately (chargedSecs/60), not gradual elapsed.
+  // During idle: add charged preview so bar doesn't jump when attack starts.
+  const domainTodayTotal = domainTodayBase + (isAttacking ? dailySession.chargedSecs / 60 : chargedMins);
   const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
   const domainBarPct = domainDailyTargetMins > 0
     ? Math.min(100, (domainTodayTotal / domainDailyTargetMins) * 100)
     : 0;
   const domainComplete = domainBarPct >= 100;
-
-  // Charge preview
   const hasDmgPreview = chargedMins > 0 && !isAttacking;
-  const previewNewToday = domainTodayBase + chargedMins;
-  const previewPct = domainDailyTargetMins > 0
-    ? Math.min(100, (previewNewToday / domainDailyTargetMins) * 100)
-    : 0;
-  const previewDamagePct = previewPct - domainBarPct;
 
   const handleLaunchAttack = () => {
     if (chargedMins <= 0) return;
@@ -135,6 +130,8 @@ export function Encounter({ onBack }: EncounterProps) {
     localAttackSecsRef.current = chargedSecs;
     setChargedMins(0);
     setShowExtendPrompt(false);
+    setTimerFlash(true);
+    setTimeout(() => setTimerFlash(false), 1000);
     updateDailySession({ phase: 'attacking', chargedSecs, remainingAttackSecs: chargedSecs });
   };
 
@@ -282,12 +279,31 @@ export function Encounter({ onBack }: EncounterProps) {
           <div className="absolute left-0 right-0 flex justify-center pointer-events-none" style={{ zIndex: 15, top: '45%', transform: 'translateY(-50%)' }}>
             <div style={{ padding: '20px 50px', background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 80%)', textAlign: 'center' }}>
               <div style={{
-                fontSize: 'clamp(80px,30vw,290px)', fontFamily: '"Jersey 10", cursive', fontWeight: 400,
-                color: '#f3d9a3', opacity: 0.6, lineHeight: 1, letterSpacing: '0.01em',
-                textShadow: '0 0 40px rgba(0,0,0,0.95),0 0 90px rgba(200,130,60,0.4),6px 6px 0 #000',
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 'clamp(6px,2vw,24px)',
                 animation: 'timer-breathe 3.6s ease-in-out infinite',
               }}>
-                {fmt(localAttackSecs)}
+                {[
+                  { val: Math.floor(localAttackSecs / 60), label: 'MIN' },
+                  { val: localAttackSecs % 60, label: 'SEG' },
+                ].map(({ val, label }, i) => (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{
+                      fontSize: 'clamp(72px,26vw,260px)',
+                      fontFamily: timerFlash ? '"Press Start 2P", monospace' : '"Jersey 10", cursive',
+                      fontWeight: 400,
+                      color: '#f3d9a3', opacity: 0.6, lineHeight: 1,
+                      letterSpacing: '0.01em',
+                      textShadow: '0 0 40px rgba(0,0,0,0.95),0 0 90px rgba(200,130,60,0.4),6px 6px 0 #000',
+                      width: 'clamp(80px,28vw,280px)', textAlign: 'center',
+                      transition: timerFlash ? 'none' : 'font-family 0.1s',
+                    }}>
+                      {String(val).padStart(2, '0')}
+                    </div>
+                    <div style={{ fontSize: 'clamp(6px,1.2vw,11px)', color: '#6b5040', letterSpacing: '0.25em', marginTop: 4, fontFamily: '"Press Start 2P", monospace' }}>
+                      {label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -386,9 +402,6 @@ export function Encounter({ onBack }: EncounterProps) {
                   background: domainComplete ? 'linear-gradient(to right,#14532d,#16a34a)' : 'linear-gradient(to right,#7f1d1d,#b91c1c)',
                   transition: isAttacking ? 'width 1s linear' : 'width 0.4s ease',
                 }} />
-                {hasDmgPreview && previewDamagePct > 0 && (
-                  <div style={{ position: 'absolute', left: `${Math.min(100, domainBarPct)}%`, top: 0, height: '100%', width: `${Math.min(100 - domainBarPct, previewDamagePct)}%`, background: flashOn ? '#dc2626' : '#991b1b', transition: 'background 0.15s' }} />
-                )}
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.3) calc(10% - 1px), rgba(0,0,0,0.3) 10%)', pointerEvents: 'none' }} />
               </div>
             </div>
