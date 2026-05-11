@@ -56,7 +56,6 @@ export function Encounter({ onBack }: EncounterProps) {
   const [showExtendPrompt, setShowExtendPrompt] = useState(false);
   const ritualFiredRef = useRef(false);
 
-  // Entrance sequence
   useEffect(() => {
     const t1 = setTimeout(() => setEntrancePhase('boss'), 700);
     const t2 = setTimeout(() => setEntrancePhase('ui'), 1300);
@@ -64,7 +63,6 @@ export function Encounter({ onBack }: EncounterProps) {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
-  // Attack timer — only runs while phase === 'attacking'
   useEffect(() => {
     if (dailySession?.phase !== 'attacking') return;
 
@@ -72,14 +70,11 @@ export function Encounter({ onBack }: EncounterProps) {
       setLocalAttackSecs(s => {
         const next = s - 1;
         localAttackSecsRef.current = next;
-
         if (next === 60) setShowExtendPrompt(true);
-
         if (next <= 0) {
           clearInterval(iv);
           if (!ritualFiredRef.current) {
             ritualFiredRef.current = true;
-            // Fire on next tick to avoid state-during-render
             setTimeout(() => {
               const session = useStore.getState().dailySession;
               if (!session) return;
@@ -95,13 +90,11 @@ export function Encounter({ onBack }: EncounterProps) {
 
     return () => {
       clearInterval(iv);
-      // Persist remaining secs on unmount
       updateDailySession({ remainingAttackSecs: localAttackSecsRef.current });
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.phase]);
 
-  // Damage flash
   useEffect(() => {
     if (!chargedMins || dailySession?.phase === 'attacking') return;
     const iv = setInterval(() => setFlashOn(f => !f), 500);
@@ -116,23 +109,17 @@ export function Encounter({ onBack }: EncounterProps) {
   const bossColor = beast?.color ?? '#888888';
   const isAttacking = dailySession.phase === 'attacking';
 
-  // ── Day HP bar ──────────────────────────────────────────────────────────────
-  const dayTotal = dailySession.totalDayMins;
-  const dayElapsed = dailySession.elapsedDayMins;
+  // ── HOY bar (the only progress bar) ────────────────────────────────────────
   const attackElapsedMins = isAttacking ? (dailySession.chargedSecs - localAttackSecs) / 60 : 0;
-  const dayRemaining = Math.max(0, dayTotal - dayElapsed - attackElapsedMins);
-  const dayBarPct = Math.max(0, Math.min(100, (dayRemaining / dayTotal) * 100));
-  const dayBarColor = dayBarPct > 50 ? '#4ade80' : dayBarPct > 25 ? '#fbbf24' : '#ef4444';
-
-  // ── Domain today progress bar ───────────────────────────────────────────────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
   const domainTodayTotal = domainTodayBase + attackElapsedMins;
   const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
   const domainBarPct = domainDailyTargetMins > 0
     ? Math.min(100, (domainTodayTotal / domainDailyTargetMins) * 100)
     : 0;
+  const domainComplete = domainBarPct >= 100;
 
-  // ── Charge preview ──────────────────────────────────────────────────────────
+  // Charge preview
   const hasDmgPreview = chargedMins > 0 && !isAttacking;
   const previewNewToday = domainTodayBase + chargedMins;
   const previewPct = domainDailyTargetMins > 0
@@ -170,7 +157,6 @@ export function Encounter({ onBack }: EncounterProps) {
     updateDailySession({ phase: 'idle', chargedSecs: 0, remainingAttackSecs: 0 });
   };
 
-  // ── Resting phase → show unified rest screen ────────────────────────────────
   if (dailySession.phase === 'resting') {
     return (
       <RestScreen
@@ -179,15 +165,12 @@ export function Encounter({ onBack }: EncounterProps) {
         bossDefeated={dailySession.lastBossDefeated}
         leveledUp={dailySession.lastRankUp}
         newRankIndex={dailySession.lastNewRankIndex}
+        excessMins={dailySession.lastExcessMins}
         isDayComplete={dailySession.isDayComplete}
         remainingRestSecs={dailySession.remainingRestSecs}
         onContinue={() => {
-          if (dailySession.isDayComplete) {
-            endDailySession();
-            onBack();
-          } else {
-            updateDailySession({ phase: 'idle', remainingRestSecs: 0 });
-          }
+          if (dailySession.isDayComplete) { endDailySession(); onBack(); }
+          else updateDailySession({ phase: 'idle', remainingRestSecs: 0 });
         }}
         onSwitchDomain={(domainId, beastId) => switchSessionDomain(domainId, beastId)}
       />
@@ -215,7 +198,6 @@ export function Encounter({ onBack }: EncounterProps) {
         transition: 'opacity 0.5s ease-in',
       }}
     >
-      {/* Blurred ambient */}
       <div className="absolute inset-0" style={{
         backgroundImage: `url(img/originales/${beast?.id}Bg.png)`,
         backgroundSize: 'cover', backgroundPosition: 'center',
@@ -223,12 +205,10 @@ export function Encounter({ onBack }: EncounterProps) {
         opacity: entrancePhase !== 'bg' ? 1 : 0, transition: 'opacity 1.2s ease-in-out', zIndex: 0,
       }} />
 
-      {/* 16:9 scene */}
       <div className="absolute top-0 bottom-0 overflow-hidden" style={{
         left: '50%', transform: 'translateX(-50%)',
         width: 'min(100vw, calc(100vh * 21 / 9))', zIndex: 1,
       }}>
-        {/* Background */}
         <div className="absolute inset-0" style={{
           backgroundImage: `url(img/originales/${beast?.id}Bg.png)`,
           backgroundSize: 'cover', backgroundPosition: 'center', imageRendering: 'pixelated',
@@ -237,7 +217,6 @@ export function Encounter({ onBack }: EncounterProps) {
           transition: 'opacity 1.2s ease-in-out, transform 1.6s ease-out',
         }} />
 
-        {/* Tint */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: isAttacking
             ? 'radial-gradient(ellipse at 50% 50%, rgba(80,0,0,0.28) 0%, rgba(0,0,0,0.55) 100%)'
@@ -245,7 +224,6 @@ export function Encounter({ onBack }: EncounterProps) {
           transition: 'background 1.5s ease', zIndex: 1,
         }} />
 
-        {/* CRT */}
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px)', zIndex: 3,
         }} />
@@ -299,7 +277,7 @@ export function Encounter({ onBack }: EncounterProps) {
           </div>
         </div>
 
-        {/* Central giant timer */}
+        {/* Giant timer */}
         {isAttacking && (
           <div className="absolute left-0 right-0 flex justify-center pointer-events-none" style={{ zIndex: 15, top: '45%', transform: 'translateY(-50%)' }}>
             <div style={{ padding: '20px 50px', background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 80%)', textAlign: 'center' }}>
@@ -315,7 +293,7 @@ export function Encounter({ onBack }: EncounterProps) {
           </div>
         )}
 
-        {/* Extend prompt at 60s */}
+        {/* Extend prompt */}
         {showExtendPrompt && isAttacking && (
           <div className="absolute left-0 right-0 flex justify-center" style={{ zIndex: 25, bottom: '28%' }}>
             <div style={{
@@ -327,25 +305,10 @@ export function Encounter({ onBack }: EncounterProps) {
               animation: 'fadein 0.3s ease-out',
             }}>
               <span style={{ fontSize: 9, color: '#d97706', letterSpacing: '0.1em' }}>¿UN POCO MÁS?</span>
-              <button
-                onClick={handleExtendAttack}
-                style={{
-                  border: '2px solid rgba(200,130,60,0.7)', background: 'rgba(60,30,0,0.6)',
-                  color: '#fbbf24', fontSize: 9, padding: '6px 12px',
-                  fontFamily: '"Press Start 2P", monospace', cursor: 'pointer',
-                  animation: 'blood-throb 1.5s ease-in-out infinite',
-                }}
-              >
+              <button onClick={handleExtendAttack} style={{ border: '2px solid rgba(200,130,60,0.7)', background: 'rgba(60,30,0,0.6)', color: '#fbbf24', fontSize: 9, padding: '6px 12px', fontFamily: '"Press Start 2P", monospace', cursor: 'pointer', animation: 'blood-throb 1.5s ease-in-out infinite' }}>
                 +30 MIN
               </button>
-              <button
-                onClick={() => setShowExtendPrompt(false)}
-                style={{
-                  border: '2px solid rgba(60,40,20,0.5)', background: 'rgba(10,6,2,0.5)',
-                  color: '#5c4a3d', fontSize: 9, padding: '6px 10px',
-                  fontFamily: '"Press Start 2P", monospace', cursor: 'pointer',
-                }}
-              >
+              <button onClick={() => setShowExtendPrompt(false)} style={{ border: '2px solid rgba(60,40,20,0.5)', background: 'rgba(10,6,2,0.5)', color: '#5c4a3d', fontSize: 9, padding: '6px 10px', fontFamily: '"Press Start 2P", monospace', cursor: 'pointer' }}>
                 NO
               </button>
             </div>
@@ -358,7 +321,6 @@ export function Encounter({ onBack }: EncounterProps) {
           zIndex: 11,
         }} />
 
-        {/* Combat aura */}
         {isAttacking && (
           <>
             <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 50% 50%, transparent 28%, ${bossColor}18 62%, ${bossColor}40 100%)`, zIndex: 12, animation: 'combat-aura 3s ease-in-out infinite' }} />
@@ -367,9 +329,8 @@ export function Encounter({ onBack }: EncounterProps) {
         )}
 
         {/* TOP HUD */}
-        <div className="absolute top-0 left-0 right-0" style={{ zIndex: 20, background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)', padding: '12px 20px 28px', ...uiSlide(true) }}>
-          {/* Row 1: Back | Status | Flee */}
-          <div className="flex items-center justify-between mb-3">
+        <div className="absolute top-0 left-0 right-0" style={{ zIndex: 20, background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%)', padding: '12px 20px 20px', ...uiSlide(true) }}>
+          <div className="flex items-center justify-between">
             <button onClick={() => setConfirmModal({ type: 'back', message: '¿Salir del ritual? El progreso del ataque actual se perderá. Podrás retomar el día desde el portal.' })} style={{ border: '2px solid rgba(100,65,30,0.5)', background: 'rgba(10,6,2,0.55)', color: '#a08060', fontSize: 10, padding: '7px 12px', fontFamily: '"Press Start 2P", monospace', cursor: 'pointer', boxShadow: '2px 2px 0 rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
               ← SALIR
             </button>
@@ -382,32 +343,12 @@ export function Encounter({ onBack }: EncounterProps) {
               </button>
             ) : <div style={{ width: 80 }} />}
           </div>
-
-          {/* Row 2: Day HP bar */}
-          <div>
-            <div className="flex justify-between items-center" style={{ marginBottom: 4 }}>
-              <span style={{ fontSize: 7, color: '#7a6050', letterSpacing: '0.1em' }}>DÍA</span>
-              <span style={{ fontSize: 7, color: '#8b7355', letterSpacing: '0.08em' }}>
-                {fmtMins(dayRemaining)} / {fmtMins(dayTotal)}
-              </span>
-            </div>
-            <div style={{ position: 'relative', height: 10, background: 'rgba(0,0,0,0.4)', border: '2px solid rgba(60,40,20,0.5)', overflow: 'hidden' }}>
-              <div style={{
-                position: 'absolute', left: 0, top: 0, height: '100%',
-                width: `${dayBarPct}%`,
-                background: `linear-gradient(to right, ${dayBarColor}99, ${dayBarColor})`,
-                transition: isAttacking ? 'width 1s linear' : 'width 0.5s ease',
-              }} />
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.25) calc(10% - 1px), rgba(0,0,0,0.25) 10%)', pointerEvents: 'none' }} />
-            </div>
-          </div>
         </div>
 
         {/* BOTTOM HUD */}
-        <div className="absolute bottom-0 left-0 right-0" style={{ zIndex: 20, background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0) 100%)', padding: '32px 20px 18px', ...uiSlide(false) }}>
+        <div className="absolute bottom-0 left-0 right-0" style={{ zIndex: 20, background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0) 100%)', padding: '32px 20px 18px', ...uiSlide(false) }}>
 
-          {/* Domain name + beast */}
-          <div className="flex justify-between items-end" style={{ marginBottom: 10 }}>
+          <div className="flex justify-between items-end" style={{ marginBottom: 12 }}>
             <div>
               <h2 style={{ fontSize: 18, letterSpacing: '0.08em', marginBottom: 3, color: '#fbbf24', textShadow: '0 0 20px rgba(251,191,36,0.4), 3px 3px 0 #000' }}>
                 {beast?.name?.toUpperCase()}
@@ -417,25 +358,34 @@ export function Encounter({ onBack }: EncounterProps) {
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: 11, color: '#c8a070', letterSpacing: '0.05em', marginBottom: 3 }}>{domain?.name ?? '???'}</p>
               {domain && domain.dailyTargetHours > 0 && (
-                <p style={{ fontSize: 8, color: '#6b5040', letterSpacing: '0.08em' }}>
-                  OBJETIVO · {domain.dailyTargetHours}h/día
+                <p style={{ fontSize: 8, color: domainComplete ? '#4ade80' : '#6b5040', letterSpacing: '0.08em' }}>
+                  {domainComplete ? '✓ OBJETIVO CUMPLIDO' : `OBJETIVO · ${domain.dailyTargetHours}h/día`}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Domain today bar */}
+          {/* HOY — single progress bar */}
           {domain && domain.dailyTargetHours > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <div className="flex justify-between items-center" style={{ marginBottom: 4 }}>
-                <span style={{ fontSize: 8, color: '#a08060', letterSpacing: '0.12em' }}>HOY</span>
-                <span style={{ fontSize: 8, color: '#7a6050' }}>
+            <div style={{ marginBottom: 14 }}>
+              <div className="flex justify-between items-center" style={{ marginBottom: 5 }}>
+                <span style={{ fontSize: 9, color: domainComplete ? '#4ade80' : '#a08060', letterSpacing: '0.12em' }}>
+                  {domainComplete ? '✓ HOY' : 'HOY'}
+                </span>
+                <span style={{ fontSize: 9, color: domainComplete ? '#4ade80' : '#7a6050' }}>
                   {fmtMins(domainTodayTotal)} / {fmtMins(domainDailyTargetMins)}
-                  {domainBarPct >= 100 && <span style={{ color: '#4ade80', marginLeft: 6 }}>✓</span>}
+                  {domainComplete && domainTodayTotal > domainDailyTargetMins && (
+                    <span style={{ color: '#fbbf24', marginLeft: 8, fontSize: 7 }}>+{fmtMins(domainTodayTotal - domainDailyTargetMins)} BONUS</span>
+                  )}
                 </span>
               </div>
-              <div style={{ position: 'relative', height: 12, background: 'rgba(0,0,0,0.4)', border: '2px solid rgba(100,20,20,0.6)', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${Math.min(100, domainBarPct)}%`, background: domainBarPct >= 100 ? 'linear-gradient(to right,#14532d,#16a34a)' : 'linear-gradient(to right,#7f1d1d,#b91c1c)', transition: 'width 0.4s ease' }} />
+              <div style={{ position: 'relative', height: 14, background: 'rgba(0,0,0,0.5)', border: '2px solid rgba(100,20,20,0.6)', overflow: 'hidden' }}>
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, height: '100%',
+                  width: `${Math.min(100, domainBarPct)}%`,
+                  background: domainComplete ? 'linear-gradient(to right,#14532d,#16a34a)' : 'linear-gradient(to right,#7f1d1d,#b91c1c)',
+                  transition: isAttacking ? 'width 1s linear' : 'width 0.4s ease',
+                }} />
                 {hasDmgPreview && previewDamagePct > 0 && (
                   <div style={{ position: 'absolute', left: `${Math.min(100, domainBarPct)}%`, top: 0, height: '100%', width: `${Math.min(100 - domainBarPct, previewDamagePct)}%`, background: flashOn ? '#dc2626' : '#991b1b', transition: 'background 0.15s' }} />
                 )}
@@ -520,7 +470,6 @@ export function Encounter({ onBack }: EncounterProps) {
         @keyframes shadow-float-contact { 0%,100%{transform:scaleX(1.0);opacity:0.9} 50%{transform:scaleX(0.4);opacity:0.2} }
         @keyframes player-breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.008)} }
         @keyframes blood-throb { 0%,100%{box-shadow:3px 3px 0 rgba(0,0,0,0.7),0 0 0 rgba(127,29,29,0)} 50%{box-shadow:3px 3px 0 rgba(0,0,0,0.7),0 0 20px rgba(185,28,28,0.7)} }
-        @keyframes ember-pulse { 0%,100%{opacity:0.82} 50%{opacity:1} }
         @keyframes combat-aura { 0%,100%{opacity:0.55} 50%{opacity:1} }
         @keyframes combat-edge { 0%,100%{opacity:0.4} 50%{opacity:0.9} }
         @keyframes fadein { from{opacity:0} to{opacity:1} }

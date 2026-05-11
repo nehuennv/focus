@@ -29,6 +29,7 @@ export interface DailySession {
   lastBossDefeated: boolean;
   lastRankUp: boolean;
   lastNewRankIndex: number;
+  lastExcessMins: number;
   dayDate: string; // YYYY-MM-DD
 }
 
@@ -353,6 +354,7 @@ export const useStore = create<FocusStore>()(
             lastBossDefeated: false,
             lastRankUp: false,
             lastNewRankIndex: 0,
+            lastExcessMins: 0,
             dayDate,
           },
         });
@@ -380,7 +382,11 @@ export const useStore = create<FocusStore>()(
           if (!domain || !state.dailySession) return state;
 
           const dailyTargetMins = Math.max(1, Math.round(domain.dailyTargetHours * 60));
-          const bossDefeated = attackedMins >= dailyTargetMins;
+          const todayBefore = getTodayMins(domainId, state.ritualSessions);
+          const bossDefeated = domain.dailyTargetHours > 0 && (todayBefore + attackedMins) >= dailyTargetMins;
+          const excessMins = domain.dailyTargetHours > 0
+            ? Math.max(0, todayBefore + attackedMins - dailyTargetMins)
+            : 0;
 
           const updatedBestiary = state.bestiary.map(entry =>
             entry.beastId === beastId
@@ -395,7 +401,8 @@ export const useStore = create<FocusStore>()(
           );
 
           const newTotalMins = state.player.totalAccumulatedMins + attackedMins;
-          const xpGained = calculateXpGain(attackedMins, bossDefeated);
+          const bonusXp = Math.floor(excessMins * 8);
+          const xpGained = calculateXpGain(attackedMins, bossDefeated) + bonusXp;
           const newXp = state.player.xp + xpGained;
           const newRankIndex = calculateRankIndex(newTotalMins);
           const leveledUp = newRankIndex > state.player.rankIndex;
@@ -439,6 +446,7 @@ export const useStore = create<FocusStore>()(
               lastBossDefeated: bossDefeated,
               lastRankUp: leveledUp,
               lastNewRankIndex: newRankIndex,
+              lastExcessMins: excessMins,
             },
           };
         });

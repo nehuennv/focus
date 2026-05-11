@@ -8,7 +8,7 @@ interface DomainsScreenProps {
 
 const fmtMins = (mins: number) => {
   const h = Math.floor(mins / 60);
-  const m = mins % 60;
+  const m = Math.round(mins % 60);
   return h > 0 ? `${h}h ${m > 0 ? `${m}m` : ''}` : `${m}m`;
 };
 
@@ -22,160 +22,147 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
       {isSummoning && <SummonModal onClose={() => setIsSummoning(false)} />}
 
       <div
-        className="min-h-screen p-4 md:p-8"
         style={{
-          background: '#0a0504',
-          backgroundImage:
-            'radial-gradient(ellipse at 50% 0%, rgba(120,50,20,0.12) 0%, transparent 65%),' +
-            'radial-gradient(ellipse at 50% 100%, rgba(60,25,10,0.10) 0%, transparent 60%)',
+          minHeight: '100vh',
+          background: '#070404',
+          backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(100,40,15,0.1) 0%, transparent 55%)',
           fontFamily: '"Press Start 2P", monospace',
-          animation: 'fadeup 0.3s ease-out',
+          animation: 'fadein 0.25s ease-out',
         }}
       >
-        <div className="w-full max-w-6xl mx-auto">
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px' }}>
 
           {/* Header */}
-          <header className="mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={onBackToMenu}
-                className="btn-pixel text-[12px] px-4 py-3"
-                style={{ borderColor: '#3d2817', background: '#0f0804', color: '#8b7355' }}
-              >
-                ← VOLVER
-              </button>
-              <div className="text-center">
-                <h1 className="text-[18px] md:text-[22px] text-amber-400 tracking-widest drop-shadow-[2px_2px_0_#000]">
-                  GRIMORIOS DE DOMINIO
-                </h1>
-                <div className="mt-2 flex items-center justify-center gap-3">
-                  <div style={{ height: 2, width: 50, background: '#3d2817' }} />
-                  <span className="text-[11px]" style={{ color: '#8b7355' }}>{rd.era.icon} {rd.fullTitle.toUpperCase()}</span>
-                  <div style={{ height: 2, width: 50, background: '#3d2817' }} />
-                </div>
+          <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+            <button
+              onClick={onBackToMenu}
+              style={{ padding: '10px 16px', border: '2px solid #2a1810', background: '#0f0804', color: '#6b5040', fontSize: 9, fontFamily: '"Press Start 2P", monospace', cursor: 'pointer', boxShadow: '3px 3px 0 #000' }}
+            >
+              ← VOLVER
+            </button>
+
+            <div style={{ textAlign: 'center' }}>
+              <h1 style={{ fontSize: 'clamp(14px,3vw,20px)', color: '#fbbf24', letterSpacing: '0.12em', textShadow: '3px 3px 0 #000', marginBottom: 6 }}>
+                GRIMORIOS
+              </h1>
+              <div style={{ fontSize: 7, color: '#4a3828', letterSpacing: '0.2em' }}>
+                {rd.era.icon} {rd.fullTitle.toUpperCase()}
               </div>
-              <button
-                onClick={() => setIsSummoning(true)}
-                className="btn-pixel text-[12px] px-4 py-3"
-                style={{ borderColor: '#92400e', background: '#1c0a00', color: '#fbbf24' }}
-              >
-                + FORJAR
-              </button>
             </div>
-            <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #3d2817 20%, #3d2817 80%, transparent)' }} />
+
+            <button
+              onClick={() => setIsSummoning(true)}
+              style={{ padding: '10px 16px', border: '2px solid #92400e', background: '#160802', color: '#fbbf24', fontSize: 9, fontFamily: '"Press Start 2P", monospace', cursor: 'pointer', boxShadow: '3px 3px 0 #000' }}
+            >
+              + FORJAR
+            </button>
           </header>
+
+          <div style={{ height: 1, background: 'linear-gradient(to right, transparent, #2a1810 20%, #2a1810 80%, transparent)', marginBottom: 24 }} />
 
           {/* Empty state */}
           {domains.length === 0 && (
-            <div className="p-12 text-center" style={{ border: '2px solid #3d2817', background: '#0a0504' }}>
-              <p className="text-[12px] leading-loose mb-6" style={{ color: '#8b7355' }}>
-                Ningún dominio ha sido sellado aún.<br />Acude al altar y forja el primero.
+            <div style={{ padding: '48px 24px', textAlign: 'center', border: '2px solid #1a0e08', background: '#0a0504' }}>
+              <p style={{ fontSize: 10, color: '#4a3828', lineHeight: 2, marginBottom: 20 }}>
+                Ningún dominio sellado aún.<br />Forja el primero para comenzar.
               </p>
-              <button onClick={() => setIsSummoning(true)} className="btn-pixel text-[12px] px-8 py-4" style={{ borderColor: '#92400e', background: '#1c0a00', color: '#fbbf24' }}>
-                ⚔ FORJAR PRIMER DOMINIO
+              <button onClick={() => setIsSummoning(true)}
+                style={{ padding: '12px 24px', border: '2px solid #92400e', background: '#160802', color: '#fbbf24', fontSize: 9, fontFamily: '"Press Start 2P", monospace', cursor: 'pointer', boxShadow: '3px 3px 0 #000' }}>
+                ⚔ FORJAR DOMINIO
               </button>
             </div>
           )}
 
           {/* Domain cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {domains.map((domain) => {
               const beast = BEASTS[domain.beastId as keyof typeof BEASTS];
-
               const thisWeekMins = getWeekMins(domain.id, ritualSessions, 0);
               const lastWeekMins = getWeekMins(domain.id, ritualSessions, 1);
-              const todayMinutes = getTodayMins(domain.id, ritualSessions);
-              const weeklyTargetMins = Math.round(domain.dailyTargetHours * 60) * domain.activeDaysPerWeek;
-              const weekPct = weeklyTargetMins > 0 ? Math.min(100, (thisWeekMins / weeklyTargetMins) * 100) : 0;
+              const todayMins = getTodayMins(domain.id, ritualSessions);
               const todayTargetMins = Math.round(domain.dailyTargetHours * 60);
-              const todayPct = todayTargetMins > 0 ? Math.min(100, (todayMinutes / todayTargetMins) * 100) : 0;
+              const weeklyTargetMins = todayTargetMins * domain.activeDaysPerWeek;
+              const todayPct = todayTargetMins > 0 ? Math.min(100, (todayMins / todayTargetMins) * 100) : 0;
+              const weekPct = weeklyTargetMins > 0 ? Math.min(100, (thisWeekMins / weeklyTargetMins) * 100) : 0;
+              const todayDone = todayPct >= 100;
+              const weekDone = weekPct >= 100;
 
               return (
                 <div
                   key={domain.id}
-                  className="relative overflow-hidden"
                   style={{
-                    border: '3px solid #252535',
-                    background: '#0f0804',
-                    boxShadow: '4px 4px 0 0 #000',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    border: '2px solid #2a1810',
+                    background: '#0c0604',
+                    boxShadow: '4px 4px 0 #000',
                   }}
                 >
                   {beast?.bgImg && (
-                    <div className="absolute inset-0 bg-cover bg-center pointer-events-none" style={{ backgroundImage: `url(${beast.bgImg})`, opacity: 0.10 }} />
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${beast.bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.07, pointerEvents: 'none' }} />
                   )}
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(160deg, rgba(15,8,4,0.6) 0%, rgba(15,8,4,0.97) 55%)' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(12,6,4,0.5) 0%, rgba(12,6,4,0.95) 50%)', pointerEvents: 'none' }} />
 
-                  <div className="relative z-10 p-4">
-                    {/* Beast sprite ghost */}
-                    {beast?.spriteImg && (
-                      <div className="absolute top-3 right-3" style={{ opacity: 0.35 }}>
-                        <img src={beast.spriteImg} alt={beast.name} style={{ width: 44, height: 44, imageRendering: 'pixelated', objectFit: 'contain' }} />
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '16px 16px 12px' }}>
+                      {beast?.spriteImg && (
+                        <div style={{ flexShrink: 0, width: 48, height: 48, border: '2px solid #2a1810', background: '#070404', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src={beast.spriteImg} alt={beast.name} style={{ width: 40, height: 40, imageRendering: 'pixelated', objectFit: 'contain' }} />
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h2 style={{ fontSize: 11, color: '#f0d0a0', marginBottom: 4, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {domain.name}
+                        </h2>
+                        <p style={{ fontSize: 6, color: '#4a3828', letterSpacing: '0.1em' }}>
+                          {beast?.name} · {domain.dailyTargetHours > 0 ? `${domain.dailyTargetHours}h/día · ${domain.activeDaysPerWeek}d/sem` : 'sin objetivo'}
+                        </p>
                       </div>
-                    )}
+                    </div>
 
-                    {/* Domain name */}
-                    <h2 className="text-[14px] pr-14 mb-1 leading-relaxed" style={{ color: '#fbbf24' }}>
-                      {domain.name}
-                    </h2>
+                    <div style={{ height: 1, background: '#1a0e08', margin: '0 16px' }} />
 
-                    {/* Beast + objective */}
-                    <p className="text-[7px] pr-14 mb-4" style={{ color: '#5c4a3d' }}>
-                      {beast?.name} · {domain.dailyTargetHours > 0 ? `${domain.dailyTargetHours}h/día · ${domain.activeDaysPerWeek}d/sem` : 'sin objetivo'}
-                    </p>
-
-                    <div style={{ height: 1, background: '#2a1810', marginBottom: 10 }} />
-
-                    {/* Today */}
-                    {todayTargetMins > 0 && (
-                      <div style={{ marginBottom: 10 }}>
-                        <div className="flex justify-between items-center" style={{ marginBottom: 4 }}>
-                          <span style={{ fontSize: 7, color: '#8b7355', letterSpacing: '0.1em' }}>HOY</span>
-                          <span style={{ fontSize: 7, color: todayPct >= 100 ? '#4ade80' : '#5c4a3d' }}>
-                            {fmtMins(todayMinutes)} / {fmtMins(todayTargetMins)}
-                            {todayPct >= 100 && ' ✓'}
-                          </span>
+                    <div style={{ padding: '12px 16px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {todayTargetMins > 0 && (
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                            <span style={{ fontSize: 7, color: todayDone ? '#4ade80' : '#6b5040', letterSpacing: '0.1em' }}>
+                              {todayDone ? '✓ HOY' : 'HOY'}
+                            </span>
+                            <span style={{ fontSize: 7, color: todayDone ? '#4ade80' : '#4a3828' }}>
+                              {fmtMins(todayMins)} / {fmtMins(todayTargetMins)}
+                            </span>
+                          </div>
+                          <div style={{ height: 8, background: '#0a0402', border: '1px solid #1a0e08', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${todayPct}%`, background: todayDone ? '#16a34a' : '#b91c1c', transition: 'width 0.4s ease' }} />
+                          </div>
                         </div>
-                        <div style={{ height: 6, background: '#1a0a00', border: '2px solid #2a1000', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${todayPct}%`, background: todayPct >= 100 ? '#16a34a' : '#b91c1c', transition: 'width 0.4s ease' }} />
+                      )}
+
+                      {weeklyTargetMins > 0 && (
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                            <span style={{ fontSize: 7, color: weekDone ? '#4ade80' : '#4a3828', letterSpacing: '0.1em' }}>
+                              {weekDone ? '✓ SEMANA' : 'SEMANA'}
+                            </span>
+                            <span style={{ fontSize: 7, color: weekDone ? '#4ade80' : '#3a2818' }}>
+                              {fmtMins(thisWeekMins)} / {fmtMins(weeklyTargetMins)}
+                            </span>
+                          </div>
+                          <div style={{ height: 6, background: '#0a0402', border: '1px solid #1a0e08', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${weekPct}%`, background: weekDone ? '#14532d' : '#7f1d1d', transition: 'width 0.4s ease' }} />
+                          </div>
                         </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 2 }}>
+                        <span style={{ fontSize: 6, color: '#2a1810' }}>
+                          {lastWeekMins > 0 ? `sem. ant: ${fmtMins(lastWeekMins)}` : ''}
+                        </span>
+                        <span style={{ fontSize: 6, color: '#2a1810' }}>
+                          {fmtMins(domain.totalAccumulatedMins)} total
+                        </span>
                       </div>
-                    )}
-
-                    {/* This week */}
-                    {weeklyTargetMins > 0 && (
-                      <div style={{ marginBottom: 10 }}>
-                        <div className="flex justify-between items-center" style={{ marginBottom: 4 }}>
-                          <span style={{ fontSize: 7, color: '#8b7355', letterSpacing: '0.1em' }}>ESTA SEMANA</span>
-                          <span style={{ fontSize: 7, color: weekPct >= 100 ? '#4ade80' : '#5c4a3d' }}>
-                            {fmtMins(thisWeekMins)} / {fmtMins(weeklyTargetMins)}
-                          </span>
-                        </div>
-                        <div style={{ height: 8, background: '#1a0a00', border: '2px solid #2a1000', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${weekPct}%`, background: weekPct >= 100 ? '#14532d' : '#7f1d1d', transition: 'width 0.4s ease' }} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Last week reference */}
-                    {weeklyTargetMins > 0 && (
-                      <div style={{ marginBottom: 10 }}>
-                        <div className="flex justify-between items-center">
-                          <span style={{ fontSize: 6, color: '#3d2817', letterSpacing: '0.08em' }}>SEM. PASADA</span>
-                          <span style={{ fontSize: 6, color: '#3d2817' }}>{fmtMins(lastWeekMins)}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div style={{ height: 1, background: '#2a1810', marginBottom: 10 }} />
-
-                    {/* Status row */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-[8px]" style={{ color: '#5c4a3d' }}>
-                        {beast?.name?.toUpperCase()}
-                      </span>
-                      <span className="text-[8px]" style={{ color: '#3d2817' }}>
-                        {fmtMins(domain.totalAccumulatedMins)} total
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -183,27 +170,28 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
             })}
           </div>
 
-          {/* Add domain CTA */}
           {domains.length > 0 && (
-            <div
+            <button
               onClick={() => setIsSummoning(true)}
-              className="mt-4 flex items-center justify-center gap-4 cursor-pointer"
               style={{
-                border: '2px dashed #3d2817',
-                background: '#0a0504',
-                padding: '20px',
-                transition: 'border-color 0.15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+                width: '100%', marginTop: 16, padding: '18px',
+                border: '2px dashed #2a1810', background: 'transparent',
+                color: '#3d2817', fontSize: 9, fontFamily: '"Press Start 2P", monospace',
+                cursor: 'pointer', letterSpacing: '0.1em',
+                transition: 'border-color 0.15s, color 0.15s',
               }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#92400e')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#3d2817')}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#92400e'; e.currentTarget.style.color = '#8b7355'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1810'; e.currentTarget.style.color = '#3d2817'; }}
             >
-              <span style={{ color: '#3d2817', fontSize: 24 }}>+</span>
-              <span className="text-[11px]" style={{ color: '#3d2817', letterSpacing: '0.12em' }}>FORJAR NUEVO DOMINIO</span>
-            </div>
+              + FORJAR NUEVO DOMINIO
+            </button>
           )}
 
         </div>
       </div>
+
+      <style>{`@keyframes fadein { from{opacity:0} to{opacity:1} }`}</style>
     </>
   );
 }
