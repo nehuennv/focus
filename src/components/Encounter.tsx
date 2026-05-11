@@ -110,21 +110,20 @@ export function Encounter({ onBack }: EncounterProps) {
   const bossColor = beast?.color ?? '#888888';
   const isAttacking = dailySession.phase === 'attacking';
 
-  // ── Progress bar ────────────────────────────────────────────────────────────
+  // ── Boss HP bar (always red, always depleting) ──────────────────────────────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
   const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
 
-  // During attack: boss HP = remaining time (100% → 0%)
-  const bossHpPct = isAttacking && dailySession.chargedSecs > 0
-    ? (localAttackSecs / dailySession.chargedSecs) * 100
+  // Idle: remaining = target - already done - currently charged
+  // Attack: remaining = localAttackSecs / chargedSecs of THIS attack (100%→0%)
+  const bossHpPct = domainDailyTargetMins > 0
+    ? isAttacking && dailySession.chargedSecs > 0
+      ? Math.max(0, (localAttackSecs / dailySession.chargedSecs) * 100)
+      : Math.max(0, Math.min(100, ((domainDailyTargetMins - domainTodayBase - chargedMins) / domainDailyTargetMins) * 100))
     : 0;
 
-  // Idle: HOY daily progress bar (fills up)
   const domainTodayTotal = domainTodayBase + chargedMins;
-  const domainBarPct = domainDailyTargetMins > 0
-    ? Math.min(100, (domainTodayTotal / domainDailyTargetMins) * 100)
-    : 0;
-  const domainComplete = domainBarPct >= 100;
+  const domainComplete = domainDailyTargetMins > 0 && domainTodayBase >= domainDailyTargetMins;
 
   const handleLaunchAttack = () => {
     if (chargedMins <= 0) return;
@@ -385,35 +384,21 @@ export function Encounter({ onBack }: EncounterProps) {
             </div>
           </div>
 
-          {/* Progress bar: boss HP during attack, HOY daily progress in idle */}
+          {/* Boss HP bar — always red, depletes as you charge and as timer runs */}
           {domain && domain.dailyTargetHours > 0 && (
             <div style={{ marginBottom: 14 }}>
               <div className="flex justify-between items-center" style={{ marginBottom: 5 }}>
-                <span style={{ fontSize: 9, color: isAttacking ? '#ef4444' : domainComplete ? '#4ade80' : '#a08060', letterSpacing: '0.12em' }}>
-                  {isAttacking ? 'VIDA' : domainComplete ? '✓ HOY' : 'HOY'}
-                </span>
-                <span style={{ fontSize: 9, color: isAttacking ? '#ef4444' : domainComplete ? '#4ade80' : '#7a6050' }}>
-                  {isAttacking
-                    ? `${fmt(localAttackSecs)}`
-                    : (
-                      <>
-                        {fmtMins(domainTodayTotal)} / {fmtMins(domainDailyTargetMins)}
-                        {domainComplete && domainTodayTotal > domainDailyTargetMins && (
-                          <span style={{ color: '#fbbf24', marginLeft: 8, fontSize: 7 }}>+{fmtMins(domainTodayTotal - domainDailyTargetMins)} BONUS</span>
-                        )}
-                      </>
-                    )
-                  }
+                <span style={{ fontSize: 9, color: '#ef4444', letterSpacing: '0.12em' }}>VIDA</span>
+                <span style={{ fontSize: 9, color: '#ef4444' }}>
+                  {isAttacking ? fmt(localAttackSecs) : `${fmtMins(domainDailyTargetMins - domainTodayBase - chargedMins)} restante`}
                 </span>
               </div>
-              <div style={{ position: 'relative', height: 14, background: 'rgba(0,0,0,0.5)', border: `2px solid ${isAttacking ? 'rgba(200,30,30,0.7)' : 'rgba(100,20,20,0.6)'}`, overflow: 'hidden' }}>
+              <div style={{ position: 'relative', height: 14, background: 'rgba(0,0,0,0.5)', border: '2px solid rgba(200,30,30,0.6)', overflow: 'hidden' }}>
                 <div style={{
                   position: 'absolute', left: 0, top: 0, height: '100%',
-                  width: `${isAttacking ? bossHpPct : Math.min(100, domainBarPct)}%`,
-                  background: isAttacking
-                    ? 'linear-gradient(to right,#7f1d1d,#dc2626)'
-                    : domainComplete ? 'linear-gradient(to right,#14532d,#16a34a)' : 'linear-gradient(to right,#1d4ed8,#3b82f6)',
-                  transition: isAttacking ? 'width 1s linear' : 'width 0.4s ease',
+                  width: `${bossHpPct}%`,
+                  background: 'linear-gradient(to right,#7f1d1d,#dc2626)',
+                  transition: isAttacking ? 'width 1s linear' : 'width 0.3s ease',
                 }} />
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.3) calc(10% - 1px), rgba(0,0,0,0.3) 10%)', pointerEvents: 'none' }} />
               </div>
