@@ -471,7 +471,7 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
 const MUSIC_LORE_VOL = 0.18;
 
 function App() {
-  const { checkAndApplyWeeklyDebt, tutorialSeen, settings } = useStore();
+  const { tutorialSeen, settings } = useStore();
   const [appPhase, setAppPhase] = useState<AppPhase>('title');
   const [currentScreen, setCurrentScreen] = useState<Screen>('hub');
   const [hubOpacity, setHubOpacity] = useState(0);
@@ -488,10 +488,6 @@ function App() {
       musicRef.current.volume = settings.musicVol;
     }
   }, [settings.musicVol, appPhase]);
-
-  useEffect(() => {
-    checkAndApplyWeeklyDebt();
-  }, [checkAndApplyWeeklyDebt]);
 
   // Click sound en cualquier botón
   useEffect(() => {

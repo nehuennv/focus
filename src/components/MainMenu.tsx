@@ -64,11 +64,9 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
   const rd = getRankDisplay(player.rankIndex);
 
   // If in encounter, render it full screen
-  if (isInEncounter && selectedDomainId) {
+  if (isInEncounter) {
     return (
       <Encounter
-        domainId={selectedDomainId}
-        selectedBeastId={selectedBeastId}
         onBack={() => {
           setIsInEncounter(false);
           handleBackToMenu();
@@ -225,11 +223,7 @@ export function MainMenu({ onNavigate }: MainMenuProps) {
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-white">{domain.name}</span>
                           <span className="text-xs text-[#5c4a3d]">
-                            {domain.currentDebtMins <= 0 ? (
-                              <span className="text-[#5c4a3d]">✓ DERROTADO</span>
-                            ) : (
-                              `${domain.currentDebtMins} min deuda`
-                            )}
+                            {domain.dailyTargetHours > 0 ? `${domain.dailyTargetHours}h/día` : ''}
                           </span>
                         </div>
                       </button>

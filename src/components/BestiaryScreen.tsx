@@ -1,5 +1,4 @@
 import { useStore, BEASTS, BEAST_UNLOCK_ORDER, ERAS, getBeastEraRequirement, isBeastUnlocked } from '../store/useStore';
-import type { BestiaryEntry } from '../store/useStore';
 
 interface BestiaryScreenProps {
   onBackToMenu: () => void;

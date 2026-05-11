@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useMovement, type Direction } from '../hooks/useMovement';
-import { useStore, BEASTS, ERAS, getRankProgress, BEAST_UNLOCK_ORDER, isBeastUnlocked } from '../store/useStore';
-import { RPGDialogue, type DialogueOption } from './RPGDialogue';
-import { BeastSelectDialogue } from './BeastSelectDialogue';
+import { useStore, ERAS, getRankProgress } from '../store/useStore';
+import { RPGDialogue } from './RPGDialogue';
 import { Encounter } from './Encounter';
+import { DailySetupScreen } from './DailySetupScreen';
 
 // ─── Grid constants ────────────────────────────────────────────────────────────
 const TILE = 42;
@@ -90,8 +90,7 @@ const TRIGGER_INFO: Record<number, { label: string; hint: string; color: string 
 };
 
 // ─── Ritual state machine ──────────────────────────────────────────────────────
-type DialogPhase = 'domain' | 'confirm' | 'beast' | 'rest';
-interface RitualData { domainId: string; beastId: string; }
+type DialogPhase = 'rest';
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 interface Hub2DProps {
@@ -103,7 +102,7 @@ interface Hub2DProps {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTutorial }: Hub2DProps) {
-  const { domains, player, settings, setSettings, isDay, setIsDay, debugUnlockAll, setDebugUnlockAll } = useStore();
+  const { player, settings, setSettings, isDay, setIsDay, debugUnlockAll, setDebugUnlockAll, dailySession, startDailySession } = useStore();
   const rp = getRankProgress(player.totalAccumulatedMins);
   const eraIdx = Math.floor(player.rankIndex / 10);
   const era = ERAS[Math.min(eraIdx, ERAS.length - 1)];
@@ -114,13 +113,13 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
 
   // Ritual state
   const [dialogPhase, setDialogPhase] = useState<DialogPhase | null>(null);
-  const [ritual, setRitual] = useState<Partial<RitualData>>({});
+  const [showDailySetup, setShowDailySetup] = useState(false);
   const [fadeToBlack, setFadeToBlack] = useState(false);
   const [inEncounter, setInEncounter] = useState(false);
   const [restTransition, setRestTransition] = useState<'fade-out' | 'fade-in' | null>(null);
   const [restMessage, setRestMessage] = useState('');
 
-  const isBlocked = dialogPhase !== null || fadeToBlack || inEncounter || restTransition !== null;
+  const isBlocked = dialogPhase !== null || showDailySetup || fadeToBlack || inEncounter || restTransition !== null;
 
   // Movement
   const { position, facing, isMoving } = useMovement({
@@ -144,81 +143,16 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
   const triggerInfo = !isBlocked ? (TRIGGER_INFO[currentTile] ?? null) : null;
 
   // ── Launch encounter ───────────────────────────────────────────────────────
-  const launchEncounter = useCallback((finalRitual: RitualData) => {
-    setRitual(finalRitual);
+  const launchEncounter = useCallback(() => {
     setDialogPhase(null);
+    setShowDailySetup(false);
     setFadeToBlack(true);
     setTimeout(() => setInEncounter(true), 900);
   }, []);
 
-  // ── Dialogue handlers ──────────────────────────────────────────────────────
-  const handleDomainSelect = useCallback((opt: DialogueOption) => {
-    setRitual(prev => ({ ...prev, domainId: opt.id }));
-    setDialogPhase('confirm');
-  }, []);
-
-  const handleBeastSelect = useCallback((opt: DialogueOption) => {
-    setRitual(prev => {
-      launchEncounter({ domainId: prev.domainId ?? '', beastId: opt.id });
-      return prev;
-    });
-  }, [launchEncounter]);
-
   // ── Dialogue props per phase ───────────────────────────────────────────────
   const getDialogueProps = () => {
     switch (dialogPhase) {
-      case 'domain': {
-        if (domains.length === 0) {
-          return {
-            speakerName: 'PORTAL OSCURO',
-            text: 'No tienes dominios forjados. Ve al Escritorio a crear uno primero.',
-            options: [],
-            onClose: () => setDialogPhase(null),
-          };
-        }
-        return {
-          speakerName: 'PORTAL OSCURO',
-          text: '¿Qué dominio deseas purgar hoy?',
-          options: domains.map(d => ({
-            id: d.id,
-            label: `${d.name.slice(0, 22).padEnd(22)} · ${d.currentDebtMins}min deuda`,
-          })),
-          onSelect: handleDomainSelect,
-          onClose: () => setDialogPhase(null),
-        };
-      }
-      case 'confirm': {
-        const domain = domains.find(d => d.id === ritual.domainId);
-        const beast = domain ? BEASTS[domain.beastId as keyof typeof BEASTS] : null;
-        return {
-          speakerName: 'PORTAL OSCURO',
-          text: beast && domain
-            ? `Dominio: ${domain.name}.\nGuardián: ${beast.name}.\n¿Procedes al combate o cambias de bestia?`
-            : 'Algo salió mal. Vuelve al inicio.',
-          options: [
-            { id: 'go', label: `⚔  Combatir con ${beast?.name ?? '???'}` },
-            { id: 'change', label: '↺  Elegir otra bestia' },
-          ],
-          onSelect: (opt: DialogueOption) => {
-            if (opt.id === 'change') {
-              setDialogPhase('beast');
-            } else if (domain && beast) {
-              launchEncounter({ domainId: domain.id, beastId: domain.beastId });
-            }
-          },
-          onClose: () => setDialogPhase('domain'),
-        };
-      }
-      case 'beast':
-        return {
-          speakerName: 'PORTAL OSCURO',
-          text: '¿A qué bestia te enfrentarás en el combate?',
-          options: BEAST_UNLOCK_ORDER
-            .filter(e => isBeastUnlocked(e.beastId, eraIdx, debugUnlockAll))
-            .map(e => ({ id: e.beastId, label: BEASTS[e.beastId].name })),
-          onSelect: handleBeastSelect,
-          onClose: () => setDialogPhase('confirm'),
-        };
       case 'rest':
         return {
           speakerName: isDay ? '🌙 ANOCHECER' : '🌅 AMANECER',
@@ -269,19 +203,25 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
       if (isNearShelf)       onOpenBestiary();
       else if (isNearDesk)   onOpenDomains();
       else if (isNearBed)    setDialogPhase('rest');
-      else if (isNearPortal) setDialogPhase('domain');
+      else if (isNearPortal) {
+        const todayDate = new Date().toISOString().slice(0, 10);
+        const hasActiveSession = dailySession !== null && dailySession.dayDate === todayDate;
+        if (hasActiveSession) {
+          launchEncounter();
+        } else {
+          setShowDailySetup(true);
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isBlocked, currentTile, position, onOpenBestiary, onOpenDomains]);
 
   // ── Encounter full-screen ─────────────────────────────────────────────────
-  if (inEncounter && ritual.domainId && ritual.beastId) {
+  if (inEncounter) {
     return (
       <Encounter
-        domainId={ritual.domainId}
-        selectedBeastId={ritual.beastId}
-        onBack={() => { setInEncounter(false); setFadeToBlack(false); setRitual({}); }}
+        onBack={() => { setInEncounter(false); setFadeToBlack(false); }}
       />
     );
   }
@@ -664,19 +604,19 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
       `}</style>
       </div>{/* end scaled wrapper */}
 
-      {/* ── Beast select panel (visual cards) ── */}
-      {dialogPhase === 'beast' && (
-        <BeastSelectDialogue
-          onSelect={(beastId) => handleBeastSelect({ id: beastId, label: beastId })}
-          onClose={() => setDialogPhase('confirm')}
-          playerEraIndex={eraIdx}
-          debugUnlockAll={debugUnlockAll}
-          width={`${Math.round(COLS * TILE * scale)}px`}
+      {/* ── Daily setup screen ── */}
+      {showDailySetup && (
+        <DailySetupScreen
+          onStart={(totalMins, domainId, beastId) => {
+            startDailySession(totalMins, domainId, beastId);
+            launchEncounter();
+          }}
+          onClose={() => setShowDailySetup(false)}
         />
       )}
 
       {/* ── RPG Dialogue — outside scale so width matches scaled grid ── */}
-      {dialogueProps && dialogPhase !== 'beast' && (
+      {dialogueProps && (
         <RPGDialogue
           {...dialogueProps}
           width={`${Math.round(COLS * TILE * scale)}px`}
