@@ -204,13 +204,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
       else if (isNearDesk)   onOpenDomains();
       else if (isNearBed)    setDialogPhase('rest');
       else if (isNearPortal) {
-        const todayDate = new Date().toISOString().slice(0, 10);
-        const hasActiveSession = dailySession !== null && dailySession.dayDate === todayDate;
-        if (hasActiveSession) {
-          launchEncounter();
-        } else {
-          setShowDailySetup(true);
-        }
+        setShowDailySetup(true);
       }
     };
     window.addEventListener('keydown', onKey);

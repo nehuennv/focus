@@ -112,8 +112,7 @@ export function Encounter({ onBack }: EncounterProps) {
 
   // ── HOY bar (the only progress bar) ────────────────────────────────────────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
-  // During attack: show committed amount immediately (chargedSecs/60), not gradual elapsed.
-  // During idle: add charged preview so bar doesn't jump when attack starts.
+  // During attack show full committed amount so bar doesn't drop to 0 at t=0
   const domainTodayTotal = domainTodayBase + (isAttacking ? dailySession.chargedSecs / 60 : chargedMins);
   const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
   const domainBarPct = domainDailyTargetMins > 0
