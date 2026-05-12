@@ -88,6 +88,8 @@ export function Encounter({ onBack }: EncounterProps) {
           }
           return 0;
         }
+        // Save every 30 seconds so resume is accurate
+        if (next % 30 === 0) updateDailySession({ remainingAttackSecs: next });
         return next;
       });
     }, 1000);
@@ -98,6 +100,19 @@ export function Encounter({ onBack }: EncounterProps) {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dailySession?.phase]);
+
+  // Save progress and warn user before tab close/refresh during attack
+  useEffect(() => {
+    if (!isAttacking) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      updateDailySession({ remainingAttackSecs: localAttackSecsRef.current });
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAttacking]);
 
   useEffect(() => {
     if (!chargedMins || dailySession?.phase === 'attacking') return;
