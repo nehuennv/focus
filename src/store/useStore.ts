@@ -142,6 +142,8 @@ export interface FocusStore {
   debugUnlockAll: boolean;
 
   createDomain: (name: string, dailyTargetHours: number, activeDaysPerWeek: number, beastId: string) => void;
+  updateDomain: (id: string, patch: Partial<Pick<Domain, 'name' | 'dailyTargetHours' | 'activeDaysPerWeek' | 'beastId'>>) => void;
+  deleteDomain: (id: string) => void;
   completeAttack: (domainId: string, beastId: string, attackedMins: number) => void;
   startDailySession: (totalMins: number, domainId: string, beastId: string) => void;
   updateDailySession: (patch: Partial<DailySession>) => void;
@@ -335,6 +337,15 @@ export const useStore = create<FocusStore>()(
           };
         });
       },
+
+      updateDomain: (id, patch) => set((state) => ({
+        domains: state.domains.map(d => d.id === id ? { ...d, ...patch } : d),
+      })),
+
+      deleteDomain: (id) => set((state) => ({
+        domains: state.domains.filter(d => d.id !== id),
+        dailySession: state.dailySession?.activeDomainId === id ? null : state.dailySession,
+      })),
 
       startDailySession: (totalMins, domainId, beastId) => {
         const dayDate = new Date().toISOString().slice(0, 10);

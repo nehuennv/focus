@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useStore, BEASTS, getRankDisplay, getWeekMins, getTodayMins } from '../store/useStore';
+import type { Domain } from '../store/useStore';
 import { SummonModal } from './SummonModal';
+import { EditDomainModal } from './EditDomainModal';
 
 interface DomainsScreenProps {
   onBackToMenu: () => void;
@@ -13,13 +15,21 @@ const fmtMins = (mins: number) => {
 };
 
 export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
-  const { player, domains, ritualSessions } = useStore();
+  const { player, domains, ritualSessions, deleteDomain } = useStore();
   const [isSummoning, setIsSummoning] = useState(false);
+  const [editingDomain, setEditingDomain] = useState<Domain | null>(null);
   const rd = getRankDisplay(player.rankIndex);
+
+  const handleDelete = (domain: Domain) => {
+    if (window.confirm(`¿Eliminar "${domain.name}"? El historial de sesiones se conserva pero el dominio desaparece.`)) {
+      deleteDomain(domain.id);
+    }
+  };
 
   return (
     <>
       {isSummoning && <SummonModal onClose={() => setIsSummoning(false)} />}
+      {editingDomain && <EditDomainModal domain={editingDomain} onClose={() => setEditingDomain(null)} />}
 
       <div
         style={{
@@ -162,6 +172,26 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                         <span style={{ fontSize: 6, color: '#2a1810' }}>
                           {fmtMins(domain.totalAccumulatedMins)} total
                         </span>
+                      </div>
+
+                      {/* CRUD actions */}
+                      <div style={{ display: 'flex', gap: 6, paddingTop: 8, borderTop: '1px solid #1a0e08', marginTop: 4 }}>
+                        <button
+                          onClick={() => setEditingDomain(domain)}
+                          style={{ flex: 1, padding: '7px 0', fontSize: 7, border: '2px solid #2a1810', background: '#0f0804', color: '#8b7355', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', letterSpacing: '0.06em' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#92400e'; e.currentTarget.style.color = '#fbbf24'; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1810'; e.currentTarget.style.color = '#8b7355'; }}
+                        >
+                          ✎ EDITAR
+                        </button>
+                        <button
+                          onClick={() => handleDelete(domain)}
+                          style={{ flex: 1, padding: '7px 0', fontSize: 7, border: '2px solid #2a1810', background: '#0f0804', color: '#5a2020', cursor: 'pointer', fontFamily: '"Press Start 2P", monospace', letterSpacing: '0.06em' }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#7f1d1d'; e.currentTarget.style.color = '#ef4444'; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1810'; e.currentTarget.style.color = '#5a2020'; }}
+                        >
+                          ✕ BORRAR
+                        </button>
                       </div>
                     </div>
                   </div>
