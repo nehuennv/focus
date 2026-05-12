@@ -113,22 +113,23 @@ export function Encounter({ onBack }: EncounterProps) {
   const bossColor = beast?.color ?? '#888888';
   const isAttacking = dailySession.phase === 'attacking';
 
-  // ── Boss HP bar — total always = daily target, segments relative to it ──────
+  // ── Boss HP bar — starts 100%, drains as day progresses ────────────────────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
   const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
   const T = domainDailyTargetMins;
 
-  // pct helpers relative to total target
-  const toPct = (mins: number) => T > 0 ? Math.min(100, Math.max(0, (mins / T) * 100)) : 0;
-
-  // already spent (prev sessions today)
-  const spentPct = toPct(domainTodayBase);
-  // elapsed in current attack (grows second by second)
+  // Real elapsed this attack (grows 0 → chargedSecs/60)
   const attackElapsedMins = isAttacking ? (dailySession.chargedSecs - localAttackSecs) / 60 : 0;
-  const elapsedPct = toPct(domainTodayBase + attackElapsedMins);
-  // committed = full charge (endpoint marker)
+
+  // HP remaining = right-edge of red bar (starts 100%, shrinks as time consumed)
+  const hpPct = T > 0 ? Math.max(0, Math.min(100, ((T - domainTodayBase - attackElapsedMins) / T) * 100)) : 100;
+
+  // Marker: where bar will end after this attack (shown as yellow line)
   const committedMins = isAttacking ? dailySession.chargedSecs / 60 : chargedMins;
-  const markerPct = toPct(domainTodayBase + committedMins);
+  const markerPct = T > 0 ? Math.max(0, Math.min(100, ((T - domainTodayBase - committedMins) / T) * 100)) : 0;
+
+  // In idle: charge preview = tenu overlay on the right edge of red (shows what WILL be consumed)
+  const previewWidthPct = !isAttacking && chargedMins > 0 && T > 0 ? Math.min(hpPct, (chargedMins / T) * 100) : 0;
 
   const domainTodayTotal = domainTodayBase + chargedMins;
   const domainComplete = T > 0 && domainTodayBase >= T;
@@ -412,19 +413,30 @@ export function Encounter({ onBack }: EncounterProps) {
                 </span>
               </div>
               <div style={{ position: 'relative', height: 16, background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(120,20,20,0.7)', overflow: 'visible' }}>
-                {/* already spent (dark red) */}
-                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${spentPct}%`, background: '#3f0a0a' }} />
-                {/* elapsed this attack (bright red, real-time) */}
-                {isAttacking && (
-                  <div style={{ position: 'absolute', left: `${spentPct}%`, top: 0, height: '100%', width: `${elapsedPct - spentPct}%`, background: 'linear-gradient(to right,#991b1b,#ef4444)', transition: 'width 1s linear' }} />
+                {/* bright red HP = right-aligned, shrinks leftward as time consumed */}
+                <div style={{
+                  position: 'absolute', right: 0, top: 0, height: '100%',
+                  width: `${hpPct - previewWidthPct}%`,
+                  background: 'linear-gradient(to right,#7f1d1d,#dc2626)',
+                  transition: isAttacking ? 'width 1s linear' : 'width 0.3s ease',
+                }} />
+                {/* dim preview overlay (idle only): right edge of red, shows what this attack will consume */}
+                {previewWidthPct > 0 && (
+                  <div style={{
+                    position: 'absolute', right: `${hpPct - previewWidthPct}%`, top: 0, height: '100%',
+                    width: `${previewWidthPct}%`,
+                    background: 'rgba(185,28,28,0.38)',
+                    transition: 'width 0.3s ease, right 0.3s ease',
+                  }} />
                 )}
-                {/* charge preview in idle (dim red) */}
-                {!isAttacking && chargedMins > 0 && (
-                  <div style={{ position: 'absolute', left: `${spentPct}%`, top: 0, height: '100%', width: `${markerPct - spentPct}%`, background: 'rgba(185,28,28,0.45)', transition: 'width 0.3s ease' }} />
-                )}
-                {/* marker line = endpoint of this attack */}
-                {markerPct > 0 && markerPct < 100 && (
-                  <div style={{ position: 'absolute', left: `${markerPct}%`, top: -3, bottom: -3, width: 3, background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.8)', transform: 'translateX(-50%)' }} />
+                {/* marker: where bar ends after this attack */}
+                {markerPct > 0 && markerPct < 99 && (
+                  <div style={{
+                    position: 'absolute', left: `${markerPct}%`, top: -3, bottom: -3, width: 3,
+                    background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.8)',
+                    transform: 'translateX(-50%)',
+                    transition: 'left 0.3s ease',
+                  }} />
                 )}
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.25) calc(10% - 1px), rgba(0,0,0,0.25) 10%)', pointerEvents: 'none' }} />
               </div>
