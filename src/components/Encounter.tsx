@@ -116,7 +116,7 @@ export function Encounter({ onBack }: EncounterProps) {
   // ── Boss HP bar — starts 100%, drains as day progresses ────────────────────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
   const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
-  const T = domainDailyTargetMins;
+  const T = dailySession.totalDayMins;
 
   // Real elapsed this attack (grows 0 → chargedSecs/60)
   const attackElapsedMins = isAttacking ? (dailySession.chargedSecs - localAttackSecs) / 60 : 0;
