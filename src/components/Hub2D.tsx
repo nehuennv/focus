@@ -133,6 +133,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
   const gridRef = useRef<HTMLDivElement>(null);
   const [clickTarget, setClickTarget] = useState<Position | null>(null);
   const [hoverTile, setHoverTile] = useState<{ x: number; y: number; tile: number } | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Walk frame — toggles on every step
   const [walkFrame, setWalkFrame] = useState<0 | 1>(0);
@@ -244,6 +245,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
   }, [isBlocked, moveTo, activateAtPos]);
 
   const handleGridMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
     if (isBlocked) { setHoverTile(null); return; }
     const rect = e.currentTarget.getBoundingClientRect();
     const tx = Math.floor(((e.clientX - rect.left) / rect.width)  * COLS);
@@ -497,27 +499,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
             }}
           />
 
-          {/* Layer 4a — Hover zone label */}
-          {hoverTile && TRIGGER_INFO[hoverTile.tile] && !isBlocked && (
-            <div style={{
-              position: 'absolute',
-              left: hoverTile.x * TILE + TILE / 2,
-              top: hoverTile.y * TILE - 22,
-              transform: 'translateX(-50%)',
-              pointerEvents: 'none',
-              zIndex: 14,
-              background: 'rgba(0,0,0,0.82)',
-              border: `1px solid ${TRIGGER_INFO[hoverTile.tile].color}`,
-              color: TRIGGER_INFO[hoverTile.tile].color,
-              fontSize: 6,
-              padding: '3px 7px',
-              letterSpacing: '0.15em',
-              whiteSpace: 'nowrap',
-              boxShadow: `0 0 8px ${TRIGGER_INFO[hoverTile.tile].color}66`,
-            }}>
-              {TRIGGER_INFO[hoverTile.tile].hint.toUpperCase()}
-            </div>
-          )}
+          {/* Layer 4a — placeholder (tooltip is rendered outside grid, fixed to mouse) */}
 
           {/* Layer 4b — Click destination marker */}
           {clickTarget && (
@@ -687,6 +669,31 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
         }
       `}</style>
       </div>{/* end scaled wrapper */}
+
+      {/* ── Mouse-following tooltip (fixed, unaffected by scale) ── */}
+      {hoverTile && TRIGGER_INFO[hoverTile.tile] && !isBlocked && (() => {
+        const info = TRIGGER_INFO[hoverTile.tile];
+        return (
+          <div style={{
+            position: 'fixed',
+            left: mousePos.x + 14,
+            top: mousePos.y - 10,
+            pointerEvents: 'none',
+            zIndex: 9999,
+            background: 'rgba(6,3,1,0.92)',
+            border: `1px solid ${info.color}`,
+            color: info.color,
+            fontSize: 8,
+            padding: '5px 10px',
+            letterSpacing: '0.15em',
+            whiteSpace: 'nowrap',
+            boxShadow: `0 0 10px ${info.color}55, 2px 2px 0 #000`,
+            fontFamily: '"Press Start 2P", monospace',
+          }}>
+            {info.hint.toUpperCase()}
+          </div>
+        );
+      })()}
 
       {/* ── Daily setup screen ── */}
       {showDailySetup && (
