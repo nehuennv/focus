@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useMovement, type Direction } from '../hooks/useMovement';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useMovement, type Direction, type Position } from '../hooks/useMovement';
 import { useStore, ERAS, getRankProgress } from '../store/useStore';
 import { RPGDialogue } from './RPGDialogue';
 import { Encounter } from './Encounter';
@@ -122,12 +122,17 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
   const isBlocked = dialogPhase !== null || showDailySetup || fadeToBlack || inEncounter || restTransition !== null;
 
   // Movement
-  const { position, facing, isMoving } = useMovement({
+  const { position, facing, isMoving, moveTo } = useMovement({
     initialPosition: PLAYER_START,
     tileMap: MAP,
     walkableTiles: WALKABLE,
     enabled: !isBlocked,
+    stepMs: 145,
   });
+
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [clickTarget, setClickTarget] = useState<Position | null>(null);
+  const [hoverTile, setHoverTile] = useState<{ x: number; y: number; tile: number } | null>(null);
 
   // Walk frame — toggles on every step
   const [walkFrame, setWalkFrame] = useState<0 | 1>(0);
@@ -181,35 +186,71 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
     }
   };
 
-  // ── Hub ENTER/SPACE activation ─────────────────────────────────────────────
+  // ── Trigger activation (keyboard Enter/Space or click arrival) ────────────
+  const activateAtPos = useCallback((pos: Position) => {
+    const tile = MAP[pos.y]?.[pos.x] ?? FLOOR;
+    const isNearShelf  = tile === SHELF  || (pos.x >= 1  && pos.x <= 5  && pos.y >= 4 && pos.y <= 7);
+    const isNearDesk   = tile === DESK   || (pos.x >= 10 && pos.x <= 14 && pos.y >= 7 && pos.y <= 10);
+    const isNearBed    = tile === BED    || (pos.x >= 2  && pos.x <= 9  && pos.y >= 11 && pos.y <= 14);
+    const isNearPortal = !isNearShelf && !isNearDesk && !isNearBed
+      && (tile === PORTAL || (pos.x >= 6 && pos.x <= 13 && pos.y >= 3 && pos.y <= 5));
+
+    if      (isNearShelf)  onOpenBestiary();
+    else if (isNearDesk)   onOpenDomains();
+    else if (isNearBed)    setDialogPhase('rest');
+    else if (isNearPortal) setShowDailySetup(true);
+  }, [onOpenBestiary, onOpenDomains]);
+
+  // ── Keyboard Enter/Space ───────────────────────────────────────────────────
   useEffect(() => {
     if (isBlocked) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       e.preventDefault();
-
-      // Check proximity to triggers — specific zones evaluated FIRST so they
-      // always win over the large portal zone when there is overlap.
-      const isNearShelf  = currentTile === SHELF
-        || (position.x >= 1 && position.x <= 5 && position.y >= 4 && position.y <= 7);
-      const isNearDesk   = currentTile === DESK
-        || (position.x >= 10 && position.x <= 14 && position.y >= 7 && position.y <= 10);
-      const isNearBed    = currentTile === BED
-        || (position.x >= 2 && position.x <= 9 && position.y >= 11 && position.y <= 14);
-      // Portal only activates when none of the specific zones match
-      const isNearPortal = !isNearShelf && !isNearDesk && !isNearBed
-        && (currentTile === PORTAL || (position.x >= 6 && position.x <= 13 && position.y >= 3 && position.y <= 5));
-
-      if (isNearShelf)       onOpenBestiary();
-      else if (isNearDesk)   onOpenDomains();
-      else if (isNearBed)    setDialogPhase('rest');
-      else if (isNearPortal) {
-        setShowDailySetup(true);
-      }
+      activateAtPos(position);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isBlocked, currentTile, position, onOpenBestiary, onOpenDomains]);
+  }, [isBlocked, position, activateAtPos]);
+
+  // ── Point-and-click ────────────────────────────────────────────────────────
+  const handleGridClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (isBlocked) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const tx = Math.floor(((e.clientX - rect.left) / rect.width)  * COLS);
+    const ty = Math.floor(((e.clientY - rect.top)  / rect.height) * ROWS);
+
+    // If clicked tile is walkable, go there; else find nearest walkable neighbor
+    let target: Position | null = null;
+    if (WALKABLE.has(MAP[ty]?.[tx] ?? -1)) {
+      target = { x: tx, y: ty };
+    } else {
+      // Spiral outward to find nearest walkable tile
+      outer: for (let r = 1; r <= 3; r++) {
+        for (let dy = -r; dy <= r; dy++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+            const nx = tx + dx, ny = ty + dy;
+            if (WALKABLE.has(MAP[ny]?.[nx] ?? -1)) { target = { x: nx, y: ny }; break outer; }
+          }
+        }
+      }
+    }
+    if (!target) return;
+
+    const isTriggerTile = [PORTAL, SHELF, DESK, BED].includes(MAP[target.y]?.[target.x] ?? -1);
+    setClickTarget(target);
+    moveTo(target, isTriggerTile ? () => { setClickTarget(null); activateAtPos(target!); } : () => setClickTarget(null));
+  }, [isBlocked, moveTo, activateAtPos]);
+
+  const handleGridMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (isBlocked) { setHoverTile(null); return; }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const tx = Math.floor(((e.clientX - rect.left) / rect.width)  * COLS);
+    const ty = Math.floor(((e.clientY - rect.top)  / rect.height) * ROWS);
+    const tile = MAP[ty]?.[tx] ?? -1;
+    setHoverTile({ x: tx, y: ty, tile });
+  }, [isBlocked]);
 
   // ── Encounter full-screen ─────────────────────────────────────────────────
   if (inEncounter) {
@@ -365,13 +406,20 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
 
         {/* ── Grid container ── */}
         <div
+          ref={gridRef}
           className="relative overflow-hidden"
           style={{
             width: gridW,
             height: gridH,
             border: '4px solid #1a1008',
             boxShadow: '0 0 60px rgba(0,0,0,0.9), 0 0 120px rgba(0,0,0,0.7)',
+            cursor: hoverTile && [PORTAL, SHELF, DESK, BED].includes(hoverTile.tile)
+              ? 'pointer'
+              : hoverTile && WALKABLE.has(hoverTile.tile) ? 'crosshair' : 'default',
           }}
+          onClick={handleGridClick}
+          onMouseMove={handleGridMouseMove}
+          onMouseLeave={() => setHoverTile(null)}
         >
           {/* Layer 0 — Room background */}
           <img
@@ -449,6 +497,44 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
             }}
           />
 
+          {/* Layer 4a — Hover zone label */}
+          {hoverTile && TRIGGER_INFO[hoverTile.tile] && !isBlocked && (
+            <div style={{
+              position: 'absolute',
+              left: hoverTile.x * TILE + TILE / 2,
+              top: hoverTile.y * TILE - 22,
+              transform: 'translateX(-50%)',
+              pointerEvents: 'none',
+              zIndex: 14,
+              background: 'rgba(0,0,0,0.82)',
+              border: `1px solid ${TRIGGER_INFO[hoverTile.tile].color}`,
+              color: TRIGGER_INFO[hoverTile.tile].color,
+              fontSize: 6,
+              padding: '3px 7px',
+              letterSpacing: '0.15em',
+              whiteSpace: 'nowrap',
+              boxShadow: `0 0 8px ${TRIGGER_INFO[hoverTile.tile].color}66`,
+            }}>
+              {TRIGGER_INFO[hoverTile.tile].hint.toUpperCase()}
+            </div>
+          )}
+
+          {/* Layer 4b — Click destination marker */}
+          {clickTarget && (
+            <div style={{
+              position: 'absolute',
+              left: clickTarget.x * TILE + TILE / 2,
+              top: clickTarget.y * TILE + TILE - 10,
+              transform: 'translateX(-50%)',
+              pointerEvents: 'none',
+              zIndex: 14,
+              width: 20, height: 8,
+              background: 'radial-gradient(ellipse, rgba(251,191,36,0.85) 0%, transparent 100%)',
+              filter: 'blur(2px)',
+              animation: 'click-target-pulse 0.7s ease-in-out infinite',
+            }} />
+          )}
+
           {/* Layer 4 — Vignette */}
           <div
             style={{
@@ -525,7 +611,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
                 textShadow: `0 0 8px ${triggerInfo.color}`,
               }}
             >
-              [{triggerInfo.label}] — ENTER para {triggerInfo.hint}
+              [{triggerInfo.label}] — ENTER o click para {triggerInfo.hint}
             </div>
           ) : (
             <div
@@ -536,7 +622,7 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
                 animation: 'explore-fade 2s ease-in-out infinite',
               }}
             >
-              ✦ Explora la habitación ✦
+              ✦ Click para moverte · WASD para caminar ✦
             </div>
           )}
         </div>
@@ -594,6 +680,10 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
         @keyframes encounter-red-glow {
           0%, 100% { box-shadow: 0 0 60px rgba(220,38,38,0.5), inset 0 0 60px rgba(220,38,38,0.3); }
           50%      { box-shadow: 0 0 100px rgba(220,38,38,0.8), inset 0 0 100px rgba(220,38,38,0.5); }
+        }
+        @keyframes click-target-pulse {
+          0%, 100% { opacity: 1; transform: translateX(-50%) scaleX(1); }
+          50%       { opacity: 0.4; transform: translateX(-50%) scaleX(0.6); }
         }
       `}</style>
       </div>{/* end scaled wrapper */}
