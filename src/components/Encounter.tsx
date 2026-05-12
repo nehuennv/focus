@@ -412,33 +412,32 @@ export function Encounter({ onBack }: EncounterProps) {
                   )}
                 </span>
               </div>
-              <div style={{ position: 'relative', height: 16, background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(120,20,20,0.7)', overflow: 'visible' }}>
-                {/* bright red HP = right-aligned, shrinks leftward as time consumed */}
+              <div style={{ position: 'relative', height: 16, background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(120,20,20,0.7)', overflow: 'hidden' }}>
+                {/* red HP bar: left-aligned, full at 100%, shrinks from right as time consumed */}
                 <div style={{
-                  position: 'absolute', right: 0, top: 0, height: '100%',
-                  width: `${hpPct - previewWidthPct}%`,
+                  position: 'absolute', left: 0, top: 0, height: '100%',
+                  width: `${hpPct}%`,
                   background: 'linear-gradient(to right,#7f1d1d,#dc2626)',
                   transition: isAttacking ? 'width 1s linear' : 'width 0.3s ease',
                 }} />
-                {/* dim preview overlay (idle only): right edge of red, shows what this attack will consume */}
+                {/* dim preview: shows how much THIS charge will consume (tenu on right edge of red) */}
                 {previewWidthPct > 0 && (
                   <div style={{
-                    position: 'absolute', right: `${hpPct - previewWidthPct}%`, top: 0, height: '100%',
+                    position: 'absolute', left: `${hpPct - previewWidthPct}%`, top: 0, height: '100%',
                     width: `${previewWidthPct}%`,
-                    background: 'rgba(185,28,28,0.38)',
-                    transition: 'width 0.3s ease, right 0.3s ease',
+                    background: 'rgba(220,38,38,0.35)',
+                    transition: 'width 0.3s ease, left 0.3s ease',
                   }} />
                 )}
-                {/* marker: where bar ends after this attack */}
+                {/* marker: where bar will stop after this attack */}
                 {markerPct > 0 && markerPct < 99 && (
                   <div style={{
-                    position: 'absolute', left: `${markerPct}%`, top: -3, bottom: -3, width: 3,
-                    background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.8)',
+                    position: 'absolute', left: `${markerPct}%`, top: 0, bottom: 0, width: 3,
+                    background: '#fbbf24', boxShadow: '0 0 6px rgba(251,191,36,0.9)',
                     transform: 'translateX(-50%)',
-                    transition: 'left 0.3s ease',
                   }} />
                 )}
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.25) calc(10% - 1px), rgba(0,0,0,0.25) 10%)', pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(0,0,0,0.2) calc(10% - 1px), rgba(0,0,0,0.2) 10%)', pointerEvents: 'none' }} />
               </div>
             </div>
           )}
