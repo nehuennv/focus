@@ -102,6 +102,8 @@ export function Encounter({ onBack }: EncounterProps) {
   }, [dailySession?.phase]);
 
   // Save progress and warn user before tab close/refresh during attack
+  const isAttacking = dailySession?.phase === 'attacking';
+
   useEffect(() => {
     if (!isAttacking) return;
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -126,7 +128,6 @@ export function Encounter({ onBack }: EncounterProps) {
   const beast = BEASTS[dailySession.activeBeastId as keyof typeof BEASTS];
   const bossScale = beast?.scale ?? 1.0;
   const bossColor = beast?.color ?? '#888888';
-  const isAttacking = dailySession.phase === 'attacking';
 
   // ── Boss HP bar — starts 100%, drains as day progresses ────────────────────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
