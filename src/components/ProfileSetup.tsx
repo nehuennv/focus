@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase, type ProfileRow } from '../lib/supabase';
 import { BEASTS } from '../store/useStore';
 import { RitualBackdrop } from './RitualBackdrop';
+import { sfx } from '../lib/sfx';
 
 const FONT = '"Press Start 2P", monospace';
 
@@ -50,8 +51,8 @@ export function ProfileSetup({ profile, userId, onDone }: {
     step === 3 ? !!item :
     true;
 
-  const next = () => { setError(null); setStep(s => Math.min(s + 1, STEPS.length - 1)); };
-  const back = () => { setError(null); setStep(s => Math.max(s - 1, 0)); };
+  const next = () => { sfx.step(); setError(null); setStep(s => Math.min(s + 1, STEPS.length - 1)); };
+  const back = () => { sfx.back(); setError(null); setStep(s => Math.max(s - 1, 0)); };
 
   const save = async () => {
     setBusy(true);
@@ -66,7 +67,8 @@ export function ProfileSetup({ profile, userId, onDone }: {
       lore: lore.trim() || null,
     });
     setBusy(false);
-    if (error) { setError(error.message); return; }
+    if (error) { sfx.error(); setError(error.message); return; }
+    sfx.success();
     await onDone();
   };
 
@@ -132,7 +134,7 @@ export function ProfileSetup({ profile, userId, onDone }: {
                 {CLASSES.map(c => {
                   const sel = charClass === c.id;
                   return (
-                    <button key={c.id} onClick={() => setCharClass(c.id)} style={{
+                    <button key={c.id} onClick={() => { sfx.click(); setCharClass(c.id); }} style={{
                       display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', cursor: 'pointer',
                       padding: '12px 14px', background: sel ? '#1c0e00' : '#0f0804',
                       border: `2px solid ${sel ? '#d97706' : '#2a1810'}`,
@@ -176,7 +178,7 @@ export function ProfileSetup({ profile, userId, onDone }: {
                 {BEAST_LIST.map(b => {
                   const sel = avatar === b.id;
                   return (
-                    <button key={b.id} onClick={() => setAvatar(b.id)} title={b.fullName} style={{
+                    <button key={b.id} onClick={() => { sfx.click(); setAvatar(b.id); }} title={b.fullName} style={{
                       aspectRatio: '1', background: sel ? '#1c0e00' : '#0f0804',
                       border: `2px solid ${sel ? '#d97706' : '#2a1810'}`,
                       boxShadow: sel ? '0 0 10px rgba(217,119,6,0.35)' : 'none',
@@ -199,7 +201,7 @@ export function ProfileSetup({ profile, userId, onDone }: {
                 {ITEMS.map(it => {
                   const sel = item === it.id;
                   return (
-                    <button key={it.id} onClick={() => setItem(it.id)} style={{
+                    <button key={it.id} onClick={() => { sfx.click(); setItem(it.id); }} style={{
                       display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left', cursor: 'pointer',
                       padding: '14px 12px', background: sel ? '#1c0e00' : '#0f0804',
                       border: `2px solid ${sel ? '#d97706' : '#2a1810'}`,

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { RitualTitle } from './RitualBackdrop';
+import { sfx } from '../lib/sfx';
 
 const FONT = '"Press Start 2P", monospace';
 
@@ -44,7 +45,9 @@ export function AuthScreen() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
+      sfx.success();
     } catch (err) {
+      sfx.error();
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setBusy(false);
@@ -127,7 +130,7 @@ export function AuthScreen() {
           <Field
             label="CONTRASEÑA" value={password} onChange={setPassword}
             type={showPass ? 'text' : 'password'} placeholder="••••••" required
-            toggle={{ on: showPass, onToggle: () => setShowPass(s => !s) }}
+            toggle={{ on: showPass, onToggle: () => { sfx.click(); setShowPass(s => !s); } }}
           />
 
           {error && (
@@ -141,7 +144,7 @@ export function AuthScreen() {
             </div>
           )}
 
-          <button type="submit" disabled={busy} style={{
+          <button type="submit" disabled={busy} onMouseEnter={() => !busy && sfx.hover()} style={{
             marginTop: 6, padding: '15px', fontFamily: FONT, fontSize: 11,
             background: busy ? '#0a0504' : '#1c0e00', color: busy ? '#6b5040' : '#fbbf24',
             border: `2px solid ${busy ? '#2a1810' : '#d97706'}`,
@@ -156,9 +159,9 @@ export function AuthScreen() {
 
         <div style={{ textAlign: 'center', marginTop: 24, position: 'relative', zIndex: 10 }}>
           <button
-            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setInfo(null); }}
+            onClick={() => { sfx.click(); setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setInfo(null); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 7, color: '#6b5040', letterSpacing: '0.1em', lineHeight: 1.8 }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#d97706')}
+            onMouseEnter={e => { sfx.hover(); e.currentTarget.style.color = '#d97706'; }}
             onMouseLeave={e => (e.currentTarget.style.color = '#6b5040')}
           >
             {mode === 'login' ? '¿SIN CUENTA? FORJÁ UN INICIADO →' : '¿YA TENÉS CUENTA? ENTRÁ →'}
