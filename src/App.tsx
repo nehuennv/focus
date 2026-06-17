@@ -4,6 +4,8 @@ import { Hub2D } from './components/Hub2D';
 import { DomainsScreen } from './components/DomainsScreen';
 import { TrophiesScreen } from './components/TrophiesScreen';
 import { Tutorial } from './components/Tutorial';
+import { asset } from './lib/asset';
+import { sfx } from './lib/sfx';
 
 type Screen = 'hub' | 'domains' | 'trophies';
 type AppPhase = 'title' | 'lore' | 'hub';
@@ -263,7 +265,7 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
 
   // Play narration and schedule auto-advance for each line
   useEffect(() => {
-    const audio = new Audio('/sounds/narrador-lore.mp3');
+    const audio = new Audio(asset('sounds/narrador-lore.mp3'));
     audioRef.current = audio;
     audio.play().catch(() => { });
 
@@ -354,7 +356,7 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
       {/* ── FULL BACKGROUND beast image ─────────────────────────────── */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'url(/img/background-lore.png)',
+        backgroundImage: `url(${asset('img/background-lore.png')})`,
         backgroundSize: 'cover', backgroundPosition: 'bottom left',
         opacity: 0.6,
         imageRendering: 'pixelated',
@@ -488,23 +490,29 @@ function App({ onOpenTournaments }: { onOpenTournaments: () => void }) {
     }
   }, [settings.musicVol, appPhase]);
 
-  // Click sound en cualquier botón
+  // Sonidos globales zzfx: hover + click en cualquier botón (juego y overlays).
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).closest('button')) {
-        const sfx = new Audio('/sounds/click-mouse.mp3');
-        sfx.volume = sfxVolRef.current;
-        sfx.play().catch(() => {});
-      }
+    let lastBtn: Element | null = null;
+    const onOver = (e: MouseEvent) => {
+      const btn = (e.target as HTMLElement).closest('button');
+      if (btn && btn !== lastBtn) { lastBtn = btn; sfx.hover(); }
+      else if (!btn) lastBtn = null;
     };
-    window.addEventListener('click', handler);
-    return () => window.removeEventListener('click', handler);
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('button')) sfx.click();
+    };
+    window.addEventListener('mouseover', onOver);
+    window.addEventListener('click', onClick);
+    return () => {
+      window.removeEventListener('mouseover', onOver);
+      window.removeEventListener('click', onClick);
+    };
   }, []);
 
   // Arranca la música cuando comienza el lore
   useEffect(() => {
     if (appPhase !== 'lore') return;
-    const audio = new Audio('/sounds/music-loop.mp3');
+    const audio = new Audio(asset('sounds/music-loop.mp3'));
     audio.loop = true;
     audio.volume = MUSIC_LORE_VOL;
     audio.play().catch(() => {});
