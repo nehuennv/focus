@@ -100,12 +100,11 @@ function ListTab({ loading, tournaments, selected, setSelected, board, userId, o
   loading: boolean; tournaments: Tournament[]; selected: Tournament | null;
   setSelected: (t: Tournament) => void; board: LeaderboardRow[]; userId: string; onGoCreate: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'link' | 'code' | null>(null);
 
-  const copyLink = () => {
-    if (!selected) return;
-    navigator.clipboard.writeText(inviteLink(selected.invite_code)).then(() => {
-      sfx.click(); setCopied(true); setTimeout(() => setCopied(false), 1800);
+  const copy = (what: 'link' | 'code', text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      sfx.click(); setCopied(what); setTimeout(() => setCopied(null), 1800);
     });
   };
 
@@ -153,12 +152,17 @@ function ListTab({ loading, tournaments, selected, setSelected, board, userId, o
             </div>
 
             {/* Invitar */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-              <div style={{ flex: 1, fontSize: 8, color: '#8b7355', border: '2px solid #2a1810', background: '#0f0804', padding: '9px 11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 110, fontSize: 8, color: '#8b7355', border: '2px solid #2a1810', background: '#0f0804', padding: '9px 11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 CÓDIGO: <span style={{ color: '#fbbf24' }}>{selected.invite_code}</span>
               </div>
-              <button onClick={copyLink} style={{ ...btnSmall, color: copied ? '#4ade80' : '#fbbf24', borderColor: copied ? '#14532d' : '#d97706' }}>
-                {copied ? '✓ COPIADO' : '⎘ COPIAR LINK'}
+              <button onClick={() => copy('link', inviteLink(selected.invite_code))} onMouseEnter={() => sfx.hover()}
+                style={{ ...btnSmall, color: copied === 'link' ? '#4ade80' : '#fbbf24', borderColor: copied === 'link' ? '#14532d' : '#d97706' }}>
+                {copied === 'link' ? '✓ LINK' : '⎘ LINK'}
+              </button>
+              <button onClick={() => copy('code', selected.invite_code)} onMouseEnter={() => sfx.hover()}
+                style={{ ...btnSmall, color: copied === 'code' ? '#4ade80' : '#fbbf24', borderColor: copied === 'code' ? '#14532d' : '#d97706' }}>
+                {copied === 'code' ? '✓ CÓDIGO' : '⎘ CÓDIGO'}
               </button>
             </div>
 
