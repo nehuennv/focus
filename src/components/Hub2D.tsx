@@ -14,7 +14,7 @@ const ROWS = 15;
 const FLOOR = 0;
 // const WALL = 1;
 const PORTAL = 2;   // → Ritual
-const SHELF = 3;   // → Bestiario
+const SHELF = 3;   // → Torneos
 const DESK = 4;   // → Dominios
 const BED = 5;    // → Descansar
 
@@ -76,7 +76,7 @@ const SPR_H = TILE * 3.6; // 151 px — ajusta este único valor para cambiar el
 // ─── Trigger zone overlays (for visual glow on the map) ───────────────────────
 const TRIGGER_ZONES = [
   { key: 'portal', col: 8, row: 4, span: 4, color: '180, 18, 18', border: '248,113,113', label: 'PORTAL', tile: PORTAL },
-  { key: 'shelf', col: 2, row: 5, span: 2, color: '146,64,14', border: '217,119,6', label: 'BESTIARIO', tile: SHELF },
+  { key: 'shelf', col: 2, row: 5, span: 2, color: '146,64,14', border: '217,119,6', label: 'TORNEOS', tile: SHELF },
   { key: 'desk', col: 12, row: 8, span: 2, color: '133, 133, 133', border: '133, 133, 133', label: 'DOMINIOS', tile: DESK },
   { key: 'bed', col: 2, row: 12, span: 7, color: '180, 100, 20', border: '240, 160, 60', label: 'DESCANSAR', tile: BED },
 ];
@@ -84,7 +84,7 @@ const TRIGGER_ZONES = [
 // ─── Trigger proximity info ────────────────────────────────────────────────────
 const TRIGGER_INFO: Record<number, { label: string; hint: string; color: string }> = {
   [PORTAL]: { label: 'PORTAL', hint: 'Comenzar Ritual', color: '#ff362bff' },
-  [SHELF]: { label: 'BIBLIOTECA', hint: 'Abrir Bestiario', color: '#f59e0b' },
+  [SHELF]: { label: 'EL GREMIO', hint: 'Abrir Torneos', color: '#f59e0b' },
   [DESK]: { label: 'ESCRITORIO', hint: 'Ver Dominios', color: '#22d3ee' },
   [BED]: { label: 'CAMA', hint: 'Descansar', color: '#f0a030' },
 };
@@ -94,14 +94,14 @@ type DialogPhase = 'rest';
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 interface Hub2DProps {
-  onOpenBestiary: () => void;
+  onOpenTournaments: () => void;
   onOpenDomains: () => void;
   onOpenTrophies: () => void;
   onOpenTutorial: () => void;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTutorial }: Hub2DProps) {
+export function Hub2D({ onOpenTournaments, onOpenDomains, onOpenTrophies, onOpenTutorial }: Hub2DProps) {
   const { player, settings, setSettings, isDay, setIsDay, debugUnlockAll, setDebugUnlockAll, startDailySession } = useStore();
   const rp = getRankProgress(player.totalAccumulatedMins);
   const eraIdx = Math.floor(player.rankIndex / 10);
@@ -196,11 +196,11 @@ export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTut
     const isNearPortal = !isNearShelf && !isNearDesk && !isNearBed
       && (tile === PORTAL || (pos.x >= 6 && pos.x <= 13 && pos.y >= 3 && pos.y <= 5));
 
-    if      (isNearShelf)  onOpenBestiary();
+    if      (isNearShelf)  onOpenTournaments();
     else if (isNearDesk)   onOpenDomains();
     else if (isNearBed)    setDialogPhase('rest');
     else if (isNearPortal) setShowDailySetup(true);
-  }, [onOpenBestiary, onOpenDomains]);
+  }, [onOpenTournaments, onOpenDomains]);
 
   // ── Keyboard Enter/Space ───────────────────────────────────────────────────
   useEffect(() => {

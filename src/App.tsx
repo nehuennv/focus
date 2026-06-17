@@ -2,11 +2,10 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useStore } from './store/useStore';
 import { Hub2D } from './components/Hub2D';
 import { DomainsScreen } from './components/DomainsScreen';
-import { BestiaryScreen } from './components/BestiaryScreen';
 import { TrophiesScreen } from './components/TrophiesScreen';
 import { Tutorial } from './components/Tutorial';
 
-type Screen = 'hub' | 'domains' | 'bestiary' | 'trophies';
+type Screen = 'hub' | 'domains' | 'trophies';
 type AppPhase = 'title' | 'lore' | 'hub';
 type TitlePhase = 'enter' | 'idle' | 'exit';
 
@@ -470,7 +469,7 @@ function LoreScreen({ onFinish }: { onFinish: () => void }) {
 // ─── App ───────────────────────────────────────────────────────────────────────
 const MUSIC_LORE_VOL = 0.18;
 
-function App() {
+function App({ onOpenTournaments }: { onOpenTournaments: () => void }) {
   const { tutorialSeen, settings } = useStore();
   const [appPhase, setAppPhase] = useState<AppPhase>('title');
   const [currentScreen, setCurrentScreen] = useState<Screen>('hub');
@@ -556,14 +555,13 @@ function App() {
       case 'hub':
         return (
           <Hub2D
-            onOpenBestiary={() => setCurrentScreen('bestiary')}
+            onOpenTournaments={onOpenTournaments}
             onOpenDomains={() => setCurrentScreen('domains')}
             onOpenTrophies={() => setCurrentScreen('trophies')}
             onOpenTutorial={openTutorial}
           />
         );
       case 'domains': return <DomainsScreen onBackToMenu={() => setCurrentScreen('hub')} />;
-      case 'bestiary': return <BestiaryScreen onBackToMenu={() => setCurrentScreen('hub')} />;
       case 'trophies': return (
         <TrophiesScreen
           onBackToMenu={() => setCurrentScreen('hub')}

@@ -1,7 +1,11 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from './auth/useAuth';
 import { AuthScreen } from './components/AuthScreen';
 import { ProfileSetup } from './components/ProfileSetup';
 import { PlayerHud } from './components/PlayerHud';
+import { TournamentsScreen } from './components/TournamentsScreen';
+import { joinTournament } from './lib/tournaments';
+import { sfx } from './lib/sfx';
 import App from './App';
 
 const FONT = '"Press Start 2P", monospace';
@@ -9,6 +13,24 @@ const FONT = '"Press Start 2P", monospace';
 // Punto de entrada: decide entre login, onboarding de perfil y el juego.
 export function Root() {
   const { loading, session, profile, refreshProfile, signOut } = useAuth();
+  const [showTournaments, setShowTournaments] = useState(false);
+
+  const ready = !!session && !!profile?.char_class;
+
+  // Link de invitación: ?join=CODE → une y abre Torneos (sólo cuando hay perfil listo).
+  useEffect(() => {
+    if (!ready) return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('join');
+    if (!code) return;
+    params.delete('join');
+    const clean = window.location.pathname + (params.toString() ? `?${params}` : '');
+    window.history.replaceState({}, '', clean);
+    joinTournament(code)
+      .then(() => sfx.success())
+      .catch(() => { /* código inválido: igual abrimos Torneos */ })
+      .finally(() => setShowTournaments(true));
+  }, [ready]);
 
   if (loading) {
     return (
@@ -30,8 +52,11 @@ export function Root() {
 
   return (
     <>
-      <App />
+      <App onOpenTournaments={() => setShowTournaments(true)} />
       <PlayerHud profile={profile} onSignOut={signOut} />
+      {showTournaments && (
+        <TournamentsScreen userId={profile.id} onClose={() => setShowTournaments(false)} />
+      )}
     </>
   );
 }

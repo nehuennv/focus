@@ -1,34 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BEASTS } from '../store/useStore';
 import type { ProfileRow } from '../lib/supabase';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sfx';
-import { TournamentsScreen } from './TournamentsScreen';
-import { joinTournament } from '../lib/tournaments';
+import { BestiaryScreen } from './BestiaryScreen';
 
 const FONT = '"Press Start 2P", monospace';
 
-// HUD flotante: iniciado logueado, acceso a Torneos y logout.
+// HUD flotante: iniciado logueado, acceso al Bestiario y logout.
 export function PlayerHud({ profile, onSignOut }: {
   profile: ProfileRow; onSignOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [showTournaments, setShowTournaments] = useState(false);
+  const [showBestiary, setShowBestiary] = useState(false);
   const beast = BEASTS[profile.avatar_beast as keyof typeof BEASTS] ?? BEASTS.maro;
-
-  // Link de invitación: ?join=CODE → une y abre Torneos.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('join');
-    if (!code) return;
-    // Limpia el query para no re-unir en cada reload.
-    params.delete('join');
-    const clean = window.location.pathname + (params.toString() ? `?${params}` : '');
-    window.history.replaceState({}, '', clean);
-    joinTournament(code)
-      .then(() => { sfx.success(); setShowTournaments(true); })
-      .catch(() => { setShowTournaments(true); });
-  }, []);
 
   return (
     <>
@@ -52,8 +37,8 @@ export function PlayerHud({ profile, onSignOut }: {
         </div>
         {open && (
           <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => { sfx.click(); setShowTournaments(true); }} onMouseEnter={() => sfx.hover()} style={hudBtn('#d97706', '#fbbf24', '#1c0e00')}>
-              ⚔ TORNEOS
+            <button onClick={() => { sfx.click(); setShowBestiary(true); }} onMouseEnter={() => sfx.hover()} style={hudBtn('#d97706', '#fbbf24', '#1c0e00')}>
+              📖 BESTIARIO
             </button>
             <button onClick={() => { sfx.click(); onSignOut(); }} style={hudBtn('#7f1d1d', '#f87171', '#160404')}>
               SALIR
@@ -62,7 +47,11 @@ export function PlayerHud({ profile, onSignOut }: {
         )}
       </div>
 
-      {showTournaments && <TournamentsScreen userId={profile.id} onClose={() => setShowTournaments(false)} />}
+      {showBestiary && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998, overflowY: 'auto', background: '#070402' }}>
+          <BestiaryScreen onBackToMenu={() => { sfx.click(); setShowBestiary(false); }} />
+        </div>
+      )}
     </>
   );
 }
