@@ -115,6 +115,9 @@ export function useMovement({
     if (!enabled) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (cooldown.current) return;
+      // Ignorar si se está escribiendo en un campo (ej. modal de Torneos).
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
 
       let dx = 0, dy = 0;
       let dir: Direction = facing;

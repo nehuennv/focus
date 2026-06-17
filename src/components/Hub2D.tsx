@@ -206,6 +206,9 @@ export function Hub2D({ onOpenTournaments, onOpenDomains, onOpenTrophies, onOpen
   useEffect(() => {
     if (isBlocked) return;
     const onKey = (e: KeyboardEvent) => {
+      // Ignorar si se está escribiendo en un campo (ej. modal de Torneos).
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       if (e.key !== 'Enter' && e.key !== ' ') return;
       e.preventDefault();
       activateAtPos(position);
