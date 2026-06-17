@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { BEASTS, getRankDisplay, useStore } from '../store/useStore';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sfx';
+import { supabase } from '../lib/supabase';
 import { ProfileCard } from './ProfileCard';
 import {
   createTournament, joinTournament, getMyTournaments, getLeaderboard, inviteLink,
@@ -47,6 +48,19 @@ export function TournamentsScreen({ userId, onClose }: { userId: string; onClose
   useEffect(() => {
     if (!selected) { setBoard([]); return; }
     getLeaderboard(selected.id).then(setBoard).catch(() => setBoard([]));
+  }, [selected]);
+
+  // Realtime: al unirse alguien o sumar minutos, refrescar el ranking en vivo.
+  useEffect(() => {
+    if (!selected) return;
+    const id = selected.id;
+    const ch = supabase
+      .channel(`tournament:${id}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'tournament_members', filter: `tournament_id=eq.${id}` },
+        () => { getLeaderboard(id).then(setBoard).catch(() => {}); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [selected]);
 
   return (
@@ -125,6 +139,7 @@ function ListTab({ loading, tournaments, selected, setSelected, board, userId, o
   );
 
   const beast = selected ? (BEASTS[selected.beast_id as keyof typeof BEASTS] ?? BEASTS.aurelian) : null;
+  const closed = selected?.ends_at ? new Date(selected.ends_at).getTime() < Date.now() : false;
 
   return (
     <div style={{ display: 'flex', minHeight: 0 }}>
@@ -188,13 +203,15 @@ function ListTab({ loading, tournaments, selected, setSelected, board, userId, o
               {board.map((r, i) => {
                 const b = BEASTS[r.avatar_beast as keyof typeof BEASTS] ?? BEASTS.maro;
                 const me = r.user_id === userId;
-                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+                const champion = closed && i === 0;
+                const medal = champion ? '👑' : i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
                 const rk = getRankDisplay(r.rank_index);
                 return (
                   <button key={r.user_id} onClick={() => { sfx.click(); onOpenProfile(r.user_id); }} onMouseEnter={() => sfx.hover()} style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', cursor: 'pointer', textAlign: 'left',
-                    background: me ? '#160a00' : '#0f0804',
-                    border: `2px solid ${me ? '#d97706' : '#1a0e08'}`,
+                    background: champion ? '#1a1400' : me ? '#160a00' : '#0f0804',
+                    border: `2px solid ${champion ? '#fde047' : me ? '#d97706' : '#1a0e08'}`,
+                    boxShadow: champion ? '0 0 12px rgba(253,224,71,0.3)' : 'none',
                   }}>
                     <span style={{ fontSize: 9, width: 22, textAlign: 'center', color: '#fbbf24' }}>{medal}</span>
                     <img src={asset(b.spriteImg)} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated', objectFit: 'contain', flexShrink: 0 }} />
