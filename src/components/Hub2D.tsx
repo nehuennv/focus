@@ -102,7 +102,7 @@ interface Hub2DProps {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export function Hub2D({ onOpenBestiary, onOpenDomains, onOpenTrophies, onOpenTutorial }: Hub2DProps) {
-  const { player, settings, setSettings, isDay, setIsDay, debugUnlockAll, setDebugUnlockAll, dailySession, startDailySession } = useStore();
+  const { player, settings, setSettings, isDay, setIsDay, debugUnlockAll, setDebugUnlockAll, startDailySession } = useStore();
   const rp = getRankProgress(player.totalAccumulatedMins);
   const eraIdx = Math.floor(player.rankIndex / 10);
   const era = ERAS[Math.min(eraIdx, ERAS.length - 1)];

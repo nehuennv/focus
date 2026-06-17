@@ -15,6 +15,13 @@ const DAYS_OPTIONS = [
   { value: 7, label: 'TODO' },
 ];
 
+const AVATAR_EMOJIS = [
+  '📚','📖','✏️','🎓','🏆','🧠','💡','🔬','🎯','🔢',
+  '📐','🧮','🎵','🎨','💻','🌐','📊','📝','⚡','🌟',
+  '🔥','💎','🦁','🐉','🦅','⚙️','🏛️','🗡️','📜','🧙',
+  '🛡️','🔮','🌙','☀️','🎮','🏃','✍️','🖥️','🔭','🧪',
+];
+
 const S: React.CSSProperties = { fontFamily: '"Press Start 2P", monospace' };
 
 export function SummonModal({ onClose }: SummonModalProps) {
@@ -25,6 +32,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
   const [dailyHours, setDailyHours] = useState<number | ''>('');
   const [dailyMins, setDailyMins] = useState<number | ''>('');
   const [activeDays, setActiveDays] = useState(5);
+  const [avatar, setAvatar] = useState('📚');
 
   const firstUnlocked = BEAST_UNLOCK_ORDER.find(e => isBeastUnlocked(e.beastId, playerEraIndex, debugUnlockAll))?.beastId ?? 'maro';
   const [selectedBeastId, setSelectedBeastId] = useState<string>(firstUnlocked);
@@ -39,7 +47,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    createDomain(subjectName.trim(), dailyTargetHours, activeDays, selectedBeastId);
+    createDomain(subjectName.trim(), dailyTargetHours, activeDays, selectedBeastId, avatar);
     onClose();
   };
 
@@ -58,7 +66,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
     >
       <div
         style={{
-          width: '100%', maxWidth: 480, maxHeight: '92vh', overflowY: 'auto',
+          width: '100%', maxWidth: 500, maxHeight: '92vh', overflowY: 'auto',
           border: '2px solid #92400e',
           background: '#0a0504',
           boxShadow: '6px 6px 0 #000, 0 0 40px rgba(146,64,14,0.15)',
@@ -70,39 +78,67 @@ export function SummonModal({ onClose }: SummonModalProps) {
             <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${selectedBeast.bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.05, pointerEvents: 'none' }} />
           )}
           <div style={{ position: 'relative', textAlign: 'center' }}>
-            <div style={{ fontSize: 6, color: '#4a3828', letterSpacing: '0.25em', marginBottom: 6 }}>⸺ ALTAR ⸺</div>
-            <h2 style={{ fontSize: 11, color: '#fbbf24', letterSpacing: '0.12em', textShadow: '2px 2px 0 #000' }}>FORJAR DOMINIO</h2>
+            <div style={{ fontSize: 8, color: '#6b5040', letterSpacing: '0.25em', marginBottom: 6 }}>⸺ ALTAR ⸺</div>
+            <h2 style={{ fontSize: 13, color: '#fbbf24', letterSpacing: '0.12em', textShadow: '2px 2px 0 #000' }}>FORJAR DOMINIO</h2>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
 
-          {/* Name */}
+          {/* Avatar + Name row */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 7, color: '#6b5040', letterSpacing: '0.18em', marginBottom: 8 }}>NOMBRE</label>
-            <input
-              type="text"
-              value={subjectName}
-              onChange={e => setSubjectName(e.target.value)}
-              placeholder="ej. Análisis Matemático II"
-              required
-              style={{
-                width: '100%', padding: '11px 14px', fontSize: 8,
-                background: '#0f0804', border: '2px solid #2a1810', color: '#f0d0a0',
-                outline: 'none', boxSizing: 'border-box', ...S,
-                transition: 'border-color 0.12s',
-              }}
-              onFocus={e => (e.target.style.borderColor = '#92400e')}
-              onBlur={e => (e.target.style.borderColor = '#2a1810')}
-            />
+            <label style={{ display: 'block', fontSize: 8, color: '#8b7355', letterSpacing: '0.18em', marginBottom: 8 }}>NOMBRE & AVATAR</label>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              {/* Avatar preview */}
+              <div style={{ flexShrink: 0, width: 52, height: 52, border: '2px solid #2a1810', background: '#0f0804', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
+                {avatar}
+              </div>
+              <input
+                type="text"
+                value={subjectName}
+                onChange={e => setSubjectName(e.target.value)}
+                placeholder="ej. Análisis Matemático II"
+                required
+                style={{
+                  flex: 1, padding: '11px 14px', fontSize: 9,
+                  background: '#0f0804', border: '2px solid #2a1810', color: '#f0d0a0',
+                  outline: 'none', boxSizing: 'border-box', ...S,
+                  transition: 'border-color 0.12s',
+                }}
+                onFocus={e => (e.target.style.borderColor = '#92400e')}
+                onBlur={e => (e.target.style.borderColor = '#2a1810')}
+              />
+            </div>
+
+            {/* Emoji picker */}
+            <div style={{ marginTop: 10, padding: '10px', border: '2px solid #1a0e08', background: '#070404' }}>
+              <div style={{ fontSize: 7, color: '#6b5040', letterSpacing: '0.15em', marginBottom: 8 }}>ICONO</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 4 }}>
+                {AVATAR_EMOJIS.map(em => (
+                  <button
+                    key={em} type="button"
+                    onClick={() => setAvatar(em)}
+                    style={{
+                      fontSize: 18, padding: '4px 2px',
+                      border: `2px solid ${avatar === em ? '#92400e' : 'transparent'}`,
+                      background: avatar === em ? '#1c0800' : 'transparent',
+                      cursor: 'pointer', borderRadius: 0,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {em}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Daily target */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 7, color: '#6b5040', letterSpacing: '0.18em', marginBottom: 10 }}>META DIARIA</label>
+            <label style={{ display: 'block', fontSize: 8, color: '#8b7355', letterSpacing: '0.18em', marginBottom: 10 }}>META DIARIA</label>
             <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 6, color: '#3d2817', letterSpacing: '0.12em', marginBottom: 6 }}>HORAS</div>
+                <div style={{ fontSize: 7, color: '#6b5040', letterSpacing: '0.12em', marginBottom: 6 }}>HORAS</div>
                 <input
                   type="number" value={dailyHours} placeholder="0" min="0" max="12"
                   onChange={e => setDailyHours(e.target.value === '' ? '' : Math.max(0, Math.min(12, Number(e.target.value))))}
@@ -112,7 +148,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
                 />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 6, color: '#3d2817', letterSpacing: '0.12em', marginBottom: 6 }}>MINUTOS</div>
+                <div style={{ fontSize: 7, color: '#6b5040', letterSpacing: '0.12em', marginBottom: 6 }}>MINUTOS</div>
                 <input
                   type="number" value={dailyMins} placeholder="0" min="0" max="59"
                   onChange={e => setDailyMins(e.target.value === '' ? '' : Math.min(59, Math.max(0, Number(e.target.value))))}
@@ -124,14 +160,14 @@ export function SummonModal({ onClose }: SummonModalProps) {
             </div>
 
             {/* Days */}
-            <div style={{ fontSize: 6, color: '#3d2817', letterSpacing: '0.12em', marginBottom: 8 }}>DÍAS / SEMANA</div>
+            <div style={{ fontSize: 7, color: '#6b5040', letterSpacing: '0.12em', marginBottom: 8 }}>DÍAS / SEMANA</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {DAYS_OPTIONS.map(opt => {
                 const sel = activeDays === opt.value;
                 return (
                   <button key={opt.value} type="button" onClick={() => setActiveDays(opt.value)}
                     style={{
-                      padding: '7px 12px', fontSize: 7,
+                      padding: '8px 14px', fontSize: 8,
                       border: `2px solid ${sel ? '#92400e' : '#2a1810'}`,
                       background: sel ? '#1c0800' : '#0f0804',
                       color: sel ? '#fbbf24' : '#6b5040',
@@ -144,7 +180,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
             </div>
 
             {dailyTargetHours > 0 && (
-              <div style={{ marginTop: 10, fontSize: 7, color: '#4a3828' }}>
+              <div style={{ marginTop: 10, fontSize: 8, color: '#6b5040' }}>
                 {fmtH(dailyTargetHours)}/día × {activeDays}d = {Math.round(weeklyMins / 60 * 10) / 10}h/sem
                 {!isValidTarget && <span style={{ color: '#ef4444', marginLeft: 10 }}>mín. 10m/día</span>}
               </div>
@@ -153,7 +189,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
 
           {/* Beast */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 7, color: '#6b5040', letterSpacing: '0.18em', marginBottom: 10 }}>GUARDIÁN</label>
+            <label style={{ display: 'block', fontSize: 8, color: '#8b7355', letterSpacing: '0.18em', marginBottom: 10 }}>GUARDIÁN</label>
 
             {/* Selected preview */}
             <div style={{ position: 'relative', overflow: 'hidden', padding: '12px 14px', border: '2px solid #3d2817', background: '#0f0804', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -164,8 +200,8 @@ export function SummonModal({ onClose }: SummonModalProps) {
                 <img src={selectedBeast?.spriteImg} alt={selectedBeast?.name} style={{ width: 44, height: 44, objectFit: 'contain', imageRendering: 'pixelated' }} />
               </div>
               <div style={{ position: 'relative' }}>
-                <p style={{ fontSize: 10, color: '#fbbf24', marginBottom: 4 }}>{selectedBeast?.name}</p>
-                <p style={{ fontSize: 6, color: '#4a3828', fontStyle: 'italic', lineHeight: 1.6 }}>{selectedBeast?.lore?.slice(0, 100)}...</p>
+                <p style={{ fontSize: 11, color: '#fbbf24', marginBottom: 4 }}>{selectedBeast?.name}</p>
+                <p style={{ fontSize: 7, color: '#6b5040', fontStyle: 'italic', lineHeight: 1.6 }}>{selectedBeast?.lore?.slice(0, 100)}...</p>
               </div>
             </div>
 
@@ -194,7 +230,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
                       <img src={beast.spriteImg} alt={unlocked ? beast.name : '???'} style={{ width: '100%', height: '100%', objectFit: 'contain', imageRendering: 'pixelated', filter: unlocked ? 'none' : 'brightness(0)' }} />
                       {!unlocked && <span style={{ position: 'absolute', fontSize: 11 }}>🔒</span>}
                     </div>
-                    <span style={{ fontSize: 5, color: sel ? '#fbbf24' : unlocked ? '#6b5040' : '#2a1810', textAlign: 'center' }}>
+                    <span style={{ fontSize: 7, color: sel ? '#fbbf24' : unlocked ? '#6b5040' : '#3d2817', textAlign: 'center' }}>
                       {unlocked ? beast.name : reqEra.icon}
                     </span>
                   </button>
@@ -206,7 +242,7 @@ export function SummonModal({ onClose }: SummonModalProps) {
           {/* Actions */}
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="button" onClick={onClose}
-              style={{ flex: 1, padding: '11px 0', border: '2px solid #2a1810', background: '#0f0804', color: '#6b5040', fontSize: 8, cursor: 'pointer', boxShadow: '3px 3px 0 #000', ...S }}>
+              style={{ flex: 1, padding: '11px 0', border: '2px solid #2a1810', background: '#0f0804', color: '#8b7355', fontSize: 9, cursor: 'pointer', boxShadow: '3px 3px 0 #000', ...S }}>
               CANCELAR
             </button>
             <button type="submit" disabled={!canSubmit}
@@ -214,8 +250,8 @@ export function SummonModal({ onClose }: SummonModalProps) {
                 flex: 2, padding: '11px 0',
                 border: `2px solid ${canSubmit ? '#92400e' : '#1a0e08'}`,
                 background: canSubmit ? '#1c0800' : '#0a0504',
-                color: canSubmit ? '#fbbf24' : '#2a1810',
-                fontSize: 8, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                color: canSubmit ? '#fbbf24' : '#3d2817',
+                fontSize: 9, cursor: canSubmit ? 'pointer' : 'not-allowed',
                 boxShadow: canSubmit ? '3px 3px 0 #000' : 'none',
                 letterSpacing: '0.06em', ...S,
               }}>

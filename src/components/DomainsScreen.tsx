@@ -115,16 +115,14 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
 
                   <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '16px 16px 12px' }}>
-                      {beast?.spriteImg && (
-                        <div style={{ flexShrink: 0, width: 48, height: 48, border: '2px solid #2a1810', background: '#070404', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <img src={beast.spriteImg} alt={beast.name} style={{ width: 40, height: 40, imageRendering: 'pixelated', objectFit: 'contain' }} />
-                        </div>
-                      )}
+                      <div style={{ flexShrink: 0, width: 48, height: 48, border: '2px solid #2a1810', background: '#070404', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
+                        {domain.avatar || '📚'}
+                      </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <h2 style={{ fontSize: 11, color: '#f0d0a0', marginBottom: 4, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {domain.name}
                         </h2>
-                        <p style={{ fontSize: 6, color: '#4a3828', letterSpacing: '0.1em' }}>
+                        <p style={{ fontSize: 8, color: '#6b5040', letterSpacing: '0.1em' }}>
                           {beast?.name} · {domain.dailyTargetHours > 0 ? `${domain.dailyTargetHours}h/día · ${domain.activeDaysPerWeek}d/sem` : 'sin objetivo'}
                         </p>
                       </div>
@@ -139,7 +137,7 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                             <span style={{ fontSize: 7, color: todayDone ? '#4ade80' : '#6b5040', letterSpacing: '0.1em' }}>
                               {todayDone ? '✓ HOY' : 'HOY'}
                             </span>
-                            <span style={{ fontSize: 7, color: todayDone ? '#4ade80' : '#4a3828' }}>
+                            <span style={{ fontSize: 7, color: todayDone ? '#4ade80' : '#8b7355' }}>
                               {fmtMins(todayMins)} / {fmtMins(todayTargetMins)}
                             </span>
                           </div>
@@ -152,10 +150,10 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                       {weeklyTargetMins > 0 && (
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                            <span style={{ fontSize: 7, color: weekDone ? '#4ade80' : '#4a3828', letterSpacing: '0.1em' }}>
+                            <span style={{ fontSize: 7, color: weekDone ? '#4ade80' : '#6b5040', letterSpacing: '0.1em' }}>
                               {weekDone ? '✓ SEMANA' : 'SEMANA'}
                             </span>
-                            <span style={{ fontSize: 7, color: weekDone ? '#4ade80' : '#3a2818' }}>
+                            <span style={{ fontSize: 7, color: weekDone ? '#4ade80' : '#8b7355' }}>
                               {fmtMins(thisWeekMins)} / {fmtMins(weeklyTargetMins)}
                             </span>
                           </div>
@@ -166,10 +164,10 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                       )}
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 2 }}>
-                        <span style={{ fontSize: 6, color: '#2a1810' }}>
+                        <span style={{ fontSize: 7, color: '#6b5040' }}>
                           {lastWeekMins > 0 ? `sem. ant: ${fmtMins(lastWeekMins)}` : ''}
                         </span>
-                        <span style={{ fontSize: 6, color: '#2a1810' }}>
+                        <span style={{ fontSize: 7, color: '#6b5040' }}>
                           {fmtMins(domain.totalAccumulatedMins)} total
                         </span>
                       </div>
@@ -207,12 +205,12 @@ export function DomainsScreen({ onBackToMenu }: DomainsScreenProps) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
                 width: '100%', marginTop: 16, padding: '18px',
                 border: '2px dashed #2a1810', background: 'transparent',
-                color: '#3d2817', fontSize: 9, fontFamily: '"Press Start 2P", monospace',
+                color: '#6b5040', fontSize: 9, fontFamily: '"Press Start 2P", monospace',
                 cursor: 'pointer', letterSpacing: '0.1em',
                 transition: 'border-color 0.15s, color 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#92400e'; e.currentTarget.style.color = '#8b7355'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1810'; e.currentTarget.style.color = '#3d2817'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#92400e'; e.currentTarget.style.color = '#fbbf24'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1810'; e.currentTarget.style.color = '#6b5040'; }}
             >
               + FORJAR NUEVO DOMINIO
             </button>

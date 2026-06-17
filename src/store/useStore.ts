@@ -12,6 +12,7 @@ export interface Domain {
   activeDaysPerWeek: number;  // 1–7, for weekly total calculation
   totalAccumulatedMins: number;
   beastId: string;
+  avatar: string;             // emoji profile picture
 }
 
 export interface DailySession {
@@ -141,8 +142,8 @@ export interface FocusStore {
   settings: { musicVol: number; sfxVol: number; hubScale: number };
   debugUnlockAll: boolean;
 
-  createDomain: (name: string, dailyTargetHours: number, activeDaysPerWeek: number, beastId: string) => void;
-  updateDomain: (id: string, patch: Partial<Pick<Domain, 'name' | 'dailyTargetHours' | 'activeDaysPerWeek' | 'beastId'>>) => void;
+  createDomain: (name: string, dailyTargetHours: number, activeDaysPerWeek: number, beastId: string, avatar: string) => void;
+  updateDomain: (id: string, patch: Partial<Pick<Domain, 'name' | 'dailyTargetHours' | 'activeDaysPerWeek' | 'beastId' | 'avatar'>>) => void;
   deleteDomain: (id: string) => void;
   completeAttack: (domainId: string, beastId: string, attackedMins: number) => void;
   startDailySession: (totalMins: number, domainId: string, beastId: string) => void;
@@ -322,13 +323,13 @@ export const useStore = create<FocusStore>()(
       setSettings: (patch) => set(s => ({ settings: { ...s.settings, ...patch } })),
       setDebugUnlockAll: (v) => set({ debugUnlockAll: v }),
 
-      createDomain: (name, dailyTargetHours, activeDaysPerWeek, beastId) => {
+      createDomain: (name, dailyTargetHours, activeDaysPerWeek, beastId, avatar) => {
         const beast = BEASTS[beastId as keyof typeof BEASTS];
         if (!beast) return;
         set((state) => {
           const newDomains = [
             ...state.domains,
-            { id: crypto.randomUUID(), name, dailyTargetHours, activeDaysPerWeek, totalAccumulatedMins: 0, beastId },
+            { id: crypto.randomUUID(), name, dailyTargetHours, activeDaysPerWeek, totalAccumulatedMins: 0, beastId, avatar },
           ];
           const newAchievements = checkNewAchievements(state.player, newDomains, state.bestiary, state.ritualSessions, 0, false);
           return {
@@ -465,7 +466,7 @@ export const useStore = create<FocusStore>()(
     }),
     {
       name: 'focus-souls-storage',
-      version: 5,
+      version: 6,
       migrate: (persistedState: unknown, version: number) => {
         const s = persistedState as Record<string, unknown>;
 
@@ -508,6 +509,12 @@ export const useStore = create<FocusStore>()(
           });
           s.dailySession = null;
           delete (s as any).lastSyncDate;
+        }
+
+        // v5 → v6: add avatar emoji to existing domains
+        if (version < 6) {
+          const domains = (s.domains as any[]) || [];
+          s.domains = domains.map((d: any) => ({ ...d, avatar: d.avatar || '📚' }));
         }
 
         return s;

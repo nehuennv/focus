@@ -72,7 +72,7 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
         {/* ── Header ── */}
         <div style={{ padding: '14px 20px 12px', borderBottom: '1px solid #1a0e08', flexShrink: 0 }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 6, color: '#4a3828', letterSpacing: '0.28em', marginBottom: 5 }}>⸺ PORTAL OSCURO ⸺</div>
+            <div style={{ fontSize: 8, color: '#6b5040', letterSpacing: '0.28em', marginBottom: 5 }}>⸺ PORTAL OSCURO ⸺</div>
             <h2 style={{ fontSize: 13, color: '#fbbf24', letterSpacing: '0.14em', textShadow: '2px 2px 0 #000' }}>RITUAL DEL DÍA</h2>
           </div>
         </div>
@@ -81,8 +81,8 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
         {hasResumable && (
           <div style={{ margin: '12px 18px 0', padding: '10px 14px', border: '2px solid #14532d', background: '#060f06', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
             <div>
-              <p style={{ fontSize: 7, color: '#4ade80', letterSpacing: '0.1em', marginBottom: 3 }}>RITUAL EN CURSO</p>
-              <p style={{ fontSize: 6, color: '#3a5a3a' }}>
+              <p style={{ fontSize: 8, color: '#4ade80', letterSpacing: '0.1em', marginBottom: 3 }}>RITUAL EN CURSO</p>
+              <p style={{ fontSize: 7, color: '#4a7a4a' }}>
                 {Math.round(dailySession!.elapsedDayMins)}m / {dailySession!.totalDayMins}m completados
               </p>
             </div>
@@ -101,7 +101,7 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
           {/* ── LEFT: Domain picker ── */}
           <div style={{ flex: '0 0 260px', borderRight: '1px solid #1a0e08', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <div style={{ padding: '12px 16px 8px', borderBottom: '1px solid #120a06', flexShrink: 0 }}>
-              <p style={{ fontSize: 6, color: '#6b5040', letterSpacing: '0.2em' }}>DOMINIO</p>
+              <p style={{ fontSize: 8, color: '#8b7355', letterSpacing: '0.2em' }}>DOMINIO</p>
             </div>
 
             {domains.length === 0 ? (
@@ -111,7 +111,6 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
             ) : (
               <div style={{ overflowY: 'auto', flex: 1 }}>
                 {domains.map(d => {
-                  const b = BEASTS[d.beastId as keyof typeof BEASTS];
                   const sel = d.id === selectedDomainId;
                   return (
                     <button
@@ -128,15 +127,14 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
                         transition: 'background 0.1s, border-color 0.1s',
                       }}
                     >
-                      {b && (
-                        <img src={b.spriteImg} alt={b.name}
-                          style={{ width: 28, height: 28, imageRendering: 'pixelated', objectFit: 'contain', opacity: sel ? 1 : 0.45, flexShrink: 0 }} />
-                      )}
+                      <span style={{ fontSize: 22, flexShrink: 0, opacity: sel ? 1 : 0.55 }}>
+                        {d.avatar || '📚'}
+                      </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 8, color: sel ? '#fbbf24' : '#8b7355', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p style={{ fontSize: 8, color: sel ? '#fbbf24' : '#8b7355', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {d.name}
                         </p>
-                        <p style={{ fontSize: 5, color: '#3d2817' }}>
+                        <p style={{ fontSize: 7, color: sel ? '#6b5040' : '#4a3828' }}>
                           {d.dailyTargetHours > 0 ? `${fmtH(d.dailyTargetHours)}/día` : 'sin objetivo'} · {d.activeDaysPerWeek}d/sem
                         </p>
                       </div>
@@ -153,7 +151,7 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
 
             {/* Hours */}
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #1a0e08' }}>
-              <p style={{ fontSize: 6, color: '#6b5040', letterSpacing: '0.2em', marginBottom: 10 }}>HORAS HOY</p>
+              <p style={{ fontSize: 8, color: '#8b7355', letterSpacing: '0.2em', marginBottom: 10 }}>HORAS HOY</p>
 
               <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                 {/* AUTO pill */}
@@ -205,7 +203,7 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
                 </div>
               </div>
 
-              <p style={{ fontSize: 6, color: '#3d2817' }}>
+              <p style={{ fontSize: 8, color: '#6b5040' }}>
                 {totalMins >= 10
                   ? `${totalMins} min de combate`
                   : <span style={{ color: '#ef4444' }}>mín. 10 min</span>}
@@ -214,7 +212,7 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
 
             {/* Beast */}
             <div style={{ padding: '14px 18px', flex: 1 }}>
-              <p style={{ fontSize: 6, color: '#6b5040', letterSpacing: '0.2em', marginBottom: 10 }}>BESTIA</p>
+              <p style={{ fontSize: 8, color: '#8b7355', letterSpacing: '0.2em', marginBottom: 10 }}>BESTIA</p>
 
               {/* Selected preview */}
               {selectedBeast && (
@@ -226,7 +224,7 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
                     style={{ width: 44, height: 44, imageRendering: 'pixelated', objectFit: 'contain', filter: `drop-shadow(0 0 6px ${selectedBeast.color}88)`, position: 'relative' }} />
                   <div style={{ position: 'relative' }}>
                     <p style={{ fontSize: 9, color: '#fbbf24', marginBottom: 3 }}>{selectedBeast.name}</p>
-                    <p style={{ fontSize: 5, color: '#4a3828', fontStyle: 'italic', lineHeight: 1.6 }}>{selectedBeast.lore.slice(0, 70)}...</p>
+                    <p style={{ fontSize: 7, color: '#6b5040', fontStyle: 'italic', lineHeight: 1.6 }}>{selectedBeast.lore.slice(0, 70)}...</p>
                   </div>
                 </div>
               )}
@@ -257,7 +255,7 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
                           style={{ width: '100%', height: '100%', objectFit: 'contain', imageRendering: 'pixelated', filter: unlocked ? 'none' : 'brightness(0)' }} />
                         {!unlocked && <span style={{ position: 'absolute', fontSize: 11 }}>🔒</span>}
                       </div>
-                      <span style={{ fontSize: 4, color: sel ? '#fbbf24' : unlocked ? '#6b5040' : '#2a1810', marginTop: 3, textAlign: 'center', lineHeight: 1.3 }}>
+                      <span style={{ fontSize: 6, color: sel ? '#fbbf24' : unlocked ? '#6b5040' : '#3d2817', marginTop: 3, textAlign: 'center', lineHeight: 1.3 }}>
                         {unlocked ? beast.name : '???'}
                       </span>
                     </button>

@@ -6,9 +6,6 @@ interface EncounterProps {
   onBack: () => void;
 }
 
-const fmt = (s: number) =>
-  `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-
 const fmtMins = (m: number) => {
   const h = Math.floor(m / 60);
   const min = Math.round(m % 60);
@@ -49,7 +46,7 @@ export function Encounter({ onBack }: EncounterProps) {
   const [chargedMins, setChargedMins] = useState(0);
   const [localAttackSecs, setLocalAttackSecs] = useState(() => dailySession?.remainingAttackSecs ?? 0);
   const localAttackSecsRef = useRef(dailySession?.remainingAttackSecs ?? 0);
-  const [flashOn, setFlashOn] = useState(true);
+  const [, setFlashOn] = useState(true);
   const [timerFlash, setTimerFlash] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const isPausedRef = useRef(false);
@@ -131,7 +128,6 @@ export function Encounter({ onBack }: EncounterProps) {
 
   // ── Boss HP bar — starts 100%, drains as day progresses ────────────────────
   const domainTodayBase = getTodayMins(dailySession.activeDomainId, ritualSessions);
-  const domainDailyTargetMins = (domain?.dailyTargetHours ?? 0) * 60;
   const T = dailySession.totalDayMins;
 
   // Real elapsed this attack (grows 0 → chargedSecs/60)
@@ -147,7 +143,6 @@ export function Encounter({ onBack }: EncounterProps) {
   // In idle: charge preview = tenu overlay on the right edge of red (shows what WILL be consumed)
   const previewWidthPct = !isAttacking && chargedMins > 0 && T > 0 ? Math.min(hpPct, (chargedMins / T) * 100) : 0;
 
-  const domainTodayTotal = domainTodayBase + chargedMins;
   const domainComplete = T > 0 && domainTodayBase >= T;
 
   const handleLaunchAttack = () => {

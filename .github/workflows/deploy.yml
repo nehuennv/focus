@@ -37,6 +37,11 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Publishable/anon key: pública por diseño (protegida por RLS), viaja en
+          # el bundle del cliente igual. No es un secreto.
+          VITE_SUPABASE_URL: https://owgxvlvzavqgjqrbppeg.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_QRQwke1T0GlBhDJhQzKlAA_8McvEnGv
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
