@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
-import { BEASTS } from '../store/useStore';
+import { BEASTS, getRankDisplay, useStore } from '../store/useStore';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sfx';
+import { ProfileCard } from './ProfileCard';
 import {
   createTournament, joinTournament, getMyTournaments, getLeaderboard, inviteLink,
   type Tournament, type LeaderboardRow,
@@ -23,19 +24,23 @@ export function TournamentsScreen({ userId, onClose }: { userId: string; onClose
   const [board, setBoard] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
+  const addTournamentDomain = useStore(s => s.addTournamentDomain);
 
   const loadList = useCallback(async () => {
     setLoading(true);
     try {
       const list = await getMyTournaments();
       setTournaments(list);
+      // Auto-vinculación: asegura un dominio local por cada torreo (idempotente).
+      list.forEach(t => addTournamentDomain({ id: t.id, name: t.name, beastId: t.beast_id, code: t.invite_code }));
       if (list.length && !selected) setSelected(list[0]);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
     } finally {
       setLoading(false);
     }
-  }, [selected]);
+  }, [selected, addTournamentDomain]);
 
   useEffect(() => { loadList(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -81,7 +86,7 @@ export function TournamentsScreen({ userId, onClose }: { userId: string; onClose
 
           {tab === 'list' && (
             <ListTab loading={loading} tournaments={tournaments} selected={selected} setSelected={setSelected}
-              board={board} userId={userId} onGoCreate={() => setTab('create')} />
+              board={board} userId={userId} onGoCreate={() => setTab('create')} onOpenProfile={setProfileUserId} />
           )}
           {tab === 'create' && (
             <CreateTab onCreated={async (t) => { sfx.success(); await loadList(); setSelected(t); setTab('list'); }} setError={setError} />
@@ -91,14 +96,17 @@ export function TournamentsScreen({ userId, onClose }: { userId: string; onClose
           )}
         </div>
       </div>
+
+      {profileUserId && <ProfileCard userId={profileUserId} onClose={() => setProfileUserId(null)} />}
     </div>
   );
 }
 
 // ─── Tab: Lista + ranking ─────────────────────────────────────────────────────
-function ListTab({ loading, tournaments, selected, setSelected, board, userId, onGoCreate }: {
+function ListTab({ loading, tournaments, selected, setSelected, board, userId, onGoCreate, onOpenProfile }: {
   loading: boolean; tournaments: Tournament[]; selected: Tournament | null;
-  setSelected: (t: Tournament) => void; board: LeaderboardRow[]; userId: string; onGoCreate: () => void;
+  setSelected: (t: Tournament) => void; board: LeaderboardRow[]; userId: string;
+  onGoCreate: () => void; onOpenProfile: (id: string) => void;
 }) {
   const [copied, setCopied] = useState<'link' | 'code' | null>(null);
 
@@ -173,17 +181,21 @@ function ListTab({ loading, tournaments, selected, setSelected, board, userId, o
                 const b = BEASTS[r.avatar_beast as keyof typeof BEASTS] ?? BEASTS.maro;
                 const me = r.user_id === userId;
                 const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+                const rk = getRankDisplay(r.rank_index);
                 return (
-                  <div key={r.user_id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+                  <button key={r.user_id} onClick={() => { sfx.click(); onOpenProfile(r.user_id); }} onMouseEnter={() => sfx.hover()} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', cursor: 'pointer', textAlign: 'left',
                     background: me ? '#160a00' : '#0f0804',
                     border: `2px solid ${me ? '#d97706' : '#1a0e08'}`,
                   }}>
                     <span style={{ fontSize: 9, width: 22, textAlign: 'center', color: '#fbbf24' }}>{medal}</span>
-                    <img src={asset(b.spriteImg)} alt="" style={{ width: 22, height: 22, imageRendering: 'pixelated', objectFit: 'contain' }} />
-                    <span style={{ flex: 1, fontSize: 8, color: me ? '#fbbf24' : '#c9b896', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.display_name}{me ? ' (vos)' : ''}</span>
-                    <span style={{ fontSize: 8, color: '#6b5040' }}>{fmtMins(r.total_mins)}</span>
-                  </div>
+                    <img src={asset(b.spriteImg)} alt="" style={{ width: 24, height: 24, imageRendering: 'pixelated', objectFit: 'contain', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 8, color: me ? '#fbbf24' : '#c9b896', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.display_name}{me ? ' (vos)' : ''}</div>
+                      <div style={{ fontSize: 6, color: rk.era.color, marginTop: 3 }}>{rk.era.icon} {rk.fullTitle}</div>
+                    </div>
+                    <span style={{ fontSize: 8, color: '#6b5040', flexShrink: 0 }}>{fmtMins(r.total_mins)}</span>
+                  </button>
                 );
               })}
             </div>

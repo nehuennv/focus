@@ -4,25 +4,9 @@ import { BEASTS } from '../store/useStore';
 import { RitualBackdrop } from './RitualBackdrop';
 import { sfx } from '../lib/sfx';
 import { asset } from '../lib/asset';
+import { CLASSES, ITEMS } from '../lib/lore';
 
 const FONT = '"Press Start 2P", monospace';
-
-// ─── Clase: tipo de estudiante ────────────────────────────────────────────────
-const CLASSES = [
-  { id: 'madrugador', name: 'El Madrugador', icon: '🌅', aptitude: 'ALBA', lore: 'Domás la mañana cuando el mundo aún duerme. Tu hoja está más filosa al amanecer.' },
-  { id: 'nocturno', name: 'El Nocturno', icon: '🌙', aptitude: 'VIGILIA', lore: 'La noche es tu dominio. Mientras otros descansan, vos forjás saber en la penumbra.' },
-  { id: 'maratonista', name: 'El Maratonista', icon: '🏃', aptitude: 'TEMPLE', lore: 'No corrés rápido: corrés lejos. Las sesiones largas no te quiebran, te templan.' },
-  { id: 'tactico', name: 'El Táctico', icon: '🧭', aptitude: 'ASTUCIA', lore: 'Planificás cada asalto. Sabés a qué bestia enfrentar y cuándo retirarte.' },
-  { id: 'obsesivo', name: 'El Obsesivo', icon: '🔥', aptitude: 'FERVOR', lore: 'Cuando entrás en foco, el mundo se apaga. Profundidad por encima de amplitud.' },
-];
-
-// ─── Reliquia: item de ayuda inicial ──────────────────────────────────────────
-const ITEMS = [
-  { id: 'reloj', name: 'Reloj de Arena Agrietado', icon: '⏳', effect: 'Hogueras más largas', lore: 'La arena cae lenta. Tus descansos arden un instante más.' },
-  { id: 'vela', name: 'Vela de Sebo Eterno', icon: '🕯️', effect: 'Llama que no muere', lore: 'Una luz constante. Marca el inicio de cada ritual sin apagarse.' },
-  { id: 'amuleto', name: 'Amuleto de Hueso', icon: '🦴', effect: 'Resistir la distracción', lore: 'Tallado de una bestia caída. Susurra "seguí" cuando flaqueás.' },
-  { id: 'pacto', name: 'Pacto de Tinta Negra', icon: '📜', effect: 'Memoria de deudas', lore: 'Cada hora que debés queda escrita. La tinta jamás olvida.' },
-];
 
 const BEAST_LIST = Object.values(BEASTS);
 const STEPS = ['NOMBRE', 'CLASE', 'SELLO', 'RELIQUIA', 'JURAMENTO'];

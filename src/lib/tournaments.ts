@@ -19,6 +19,7 @@ export interface LeaderboardRow {
   display_name: string;
   avatar_beast: string;
   char_class: string | null;
+  rank_index: number;
 }
 
 // Crea un torneo (el owner se auto-une vía trigger). Devuelve el torneo creado.

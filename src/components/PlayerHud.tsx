@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { BEASTS } from '../store/useStore';
+import { BEASTS, getRankDisplay } from '../store/useStore';
 import type { ProfileRow } from '../lib/supabase';
 import { asset } from '../lib/asset';
 import { sfx } from '../lib/sfx';
 import { BestiaryScreen } from './BestiaryScreen';
+import { ProfileCard } from './ProfileCard';
 
 const FONT = '"Press Start 2P", monospace';
 
-// HUD flotante: iniciado logueado, acceso al Bestiario y logout.
+// HUD flotante: iniciado logueado, rango, acceso al Bestiario y logout.
 export function PlayerHud({ profile, onSignOut }: {
   profile: ProfileRow; onSignOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [showBestiary, setShowBestiary] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const beast = BEASTS[profile.avatar_beast as keyof typeof BEASTS] ?? BEASTS.maro;
+  const rank = getRankDisplay(profile.rank_index);
 
   return (
     <>
@@ -29,11 +32,12 @@ export function PlayerHud({ profile, onSignOut }: {
           transition: 'border-color 0.15s, box-shadow 0.15s', cursor: 'default',
         }}
       >
-        <img src={asset(beast.spriteImg)} alt={beast.name}
-          style={{ width: 26, height: 26, imageRendering: 'pixelated', objectFit: 'contain', flexShrink: 0, filter: `drop-shadow(0 0 4px ${beast.color}aa)` }} />
+        <img src={asset(beast.spriteImg)} alt={beast.name} title="Ver mi ficha"
+          onClick={() => { sfx.click(); setShowProfile(true); }}
+          style={{ width: 26, height: 26, imageRendering: 'pixelated', objectFit: 'contain', flexShrink: 0, cursor: 'pointer', filter: `drop-shadow(0 0 4px ${beast.color}aa)` }} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 8, color: '#fbbf24', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{profile.display_name}</div>
-          <div style={{ fontSize: 6, color: '#6b5040', marginTop: 3, letterSpacing: '0.08em' }}>{profile.char_class?.toUpperCase()}</div>
+          <div style={{ fontSize: 6, color: rank.era.color, marginTop: 3, letterSpacing: '0.08em' }}>{rank.era.icon} {rank.fullTitle}</div>
         </div>
         {open && (
           <div style={{ display: 'flex', gap: 6 }}>
@@ -52,6 +56,8 @@ export function PlayerHud({ profile, onSignOut }: {
           <BestiaryScreen onBackToMenu={() => { sfx.click(); setShowBestiary(false); }} />
         </div>
       )}
+
+      {showProfile && <ProfileCard userId={profile.id} onClose={() => setShowProfile(false)} />}
     </>
   );
 }

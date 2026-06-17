@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { syncProfileStats } from '../lib/sync';
+import { addTournamentMins } from '../lib/tournaments';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -13,6 +15,8 @@ export interface Domain {
   totalAccumulatedMins: number;
   beastId: string;
   avatar: string;             // emoji profile picture
+  tournamentId?: string;      // si el dominio pertenece a un torneo online
+  tournamentCode?: string;    // código de invitación del torneo
 }
 
 export interface DailySession {
@@ -143,6 +147,7 @@ export interface FocusStore {
   debugUnlockAll: boolean;
 
   createDomain: (name: string, dailyTargetHours: number, activeDaysPerWeek: number, beastId: string, avatar: string) => void;
+  addTournamentDomain: (t: { id: string; name: string; beastId: string; code: string }) => void;
   updateDomain: (id: string, patch: Partial<Pick<Domain, 'name' | 'dailyTargetHours' | 'activeDaysPerWeek' | 'beastId' | 'avatar'>>) => void;
   deleteDomain: (id: string) => void;
   completeAttack: (domainId: string, beastId: string, attackedMins: number) => void;
@@ -339,6 +344,30 @@ export const useStore = create<FocusStore>()(
         });
       },
 
+      // Crea el dominio ligado a un torneo (idempotente por tournamentId).
+      addTournamentDomain: (t) => {
+        set((state) => {
+          if (state.domains.some(d => d.tournamentId === t.id)) return state;
+          const beast = BEASTS[t.beastId as keyof typeof BEASTS] ? t.beastId : 'aurelian';
+          return {
+            domains: [
+              ...state.domains,
+              {
+                id: crypto.randomUUID(),
+                name: t.name,
+                dailyTargetHours: 2,
+                activeDaysPerWeek: 5,
+                totalAccumulatedMins: 0,
+                beastId: beast,
+                avatar: '🏆',
+                tournamentId: t.id,
+                tournamentCode: t.code,
+              },
+            ],
+          };
+        });
+      },
+
       updateDomain: (id, patch) => set((state) => ({
         domains: state.domains.map(d => d.id === id ? { ...d, ...patch } : d),
       })),
@@ -418,6 +447,13 @@ export const useStore = create<FocusStore>()(
           const newXp = state.player.xp + xpGained;
           const newRankIndex = calculateRankIndex(newTotalMins);
           const leveledUp = newRankIndex > state.player.rankIndex;
+
+          // ── Sync online (fire-and-forget): horas + rango del perfil, y minutos
+          // al torneo si el dominio está vinculado. No bloquea el juego.
+          queueMicrotask(() => {
+            void syncProfileStats(newTotalMins, newRankIndex);
+            if (domain.tournamentId) void addTournamentMins(domain.tournamentId, attackedMins);
+          });
 
           const updatedSessions = [
             ...state.ritualSessions,

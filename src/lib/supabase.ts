@@ -27,5 +27,6 @@ export interface ProfileRow {
   starting_item: string | null;
   lore: string | null;
   total_mins: number;
+  rank_index: number;
   created_at: string;
 }
