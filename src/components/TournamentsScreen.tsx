@@ -155,7 +155,15 @@ function ListTab({ loading, tournaments, selected, setSelected, board, userId, o
               <img src={asset(beast.spriteImg)} alt="" style={{ width: 40, height: 40, imageRendering: 'pixelated', objectFit: 'contain', filter: `drop-shadow(0 0 6px ${beast.color}aa)` }} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 11, color: '#fbbf24', marginBottom: 5, overflow: 'hidden', textOverflow: 'ellipsis' }}>{selected.name}</div>
-                {selected.ends_at && <div style={{ fontSize: 7, color: '#6b5040' }}>cierra {new Date(selected.ends_at).toLocaleDateString()}</div>}
+                {selected.ends_at && (() => {
+                  const days = Math.ceil((new Date(selected.ends_at).getTime() - Date.now()) / 86400000);
+                  return (
+                    <div style={{ fontSize: 7, color: days <= 3 && days >= 0 ? '#f87171' : '#6b5040', letterSpacing: '0.08em' }}>
+                      {days > 1 ? `⏳ FALTAN ${days} DÍAS` : days === 1 ? '⏳ ¡MAÑANA!' : days === 0 ? '⏳ ¡HOY!' : '🏁 CERRADO'}
+                      {' · '}{new Date(selected.ends_at).toLocaleDateString()}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
