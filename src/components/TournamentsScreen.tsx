@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase';
 import { ProfileCard } from './ProfileCard';
 import {
   createTournament, joinTournament, getMyTournaments, getLeaderboard, inviteLink,
-  type Tournament, type LeaderboardRow,
+  leaveTournament, deleteTournament, updateTournament, finalizeTournament, getEvents,
+  type Tournament, type LeaderboardRow, type TournamentEvent,
 } from '../lib/tournaments';
 
 const FONT = '"Press Start 2P", monospace';
@@ -100,7 +101,8 @@ export function TournamentsScreen({ userId, onClose }: { userId: string; onClose
 
           {tab === 'list' && (
             <ListTab loading={loading} tournaments={tournaments} selected={selected} setSelected={setSelected}
-              board={board} userId={userId} onGoCreate={() => setTab('create')} onOpenProfile={setProfileUserId} />
+              board={board} userId={userId} onGoCreate={() => setTab('create')} onOpenProfile={setProfileUserId}
+              reload={loadList} />
           )}
           {tab === 'create' && (
             <CreateTab onCreated={async (t) => { sfx.success(); await loadList(); setSelected(t); setTab('list'); }} setError={setError} />
@@ -117,12 +119,57 @@ export function TournamentsScreen({ userId, onClose }: { userId: string; onClose
 }
 
 // ─── Tab: Lista + ranking ─────────────────────────────────────────────────────
-function ListTab({ loading, tournaments, selected, setSelected, board, userId, onGoCreate, onOpenProfile }: {
+function ListTab({ loading, tournaments, selected, setSelected, board, userId, onGoCreate, onOpenProfile, reload }: {
   loading: boolean; tournaments: Tournament[]; selected: Tournament | null;
-  setSelected: (t: Tournament) => void; board: LeaderboardRow[]; userId: string;
-  onGoCreate: () => void; onOpenProfile: (id: string) => void;
+  setSelected: (t: Tournament | null) => void; board: LeaderboardRow[]; userId: string;
+  onGoCreate: () => void; onOpenProfile: (id: string) => void; reload: () => Promise<void>;
 }) {
   const [copied, setCopied] = useState<'link' | 'code' | null>(null);
+  const [events, setEvents] = useState<TournamentEvent[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const removeTournamentDomain = useStore(s => s.removeTournamentDomain);
+
+  const isOwner = selected?.owner_id === userId;
+
+  // Feed: cargar + realtime.
+  useEffect(() => {
+    if (!selected) { setEvents([]); return; }
+    const id = selected.id;
+    getEvents(id).then(setEvents).catch(() => setEvents([]));
+    const ch = supabase.channel(`feed:${id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tournament_events', filter: `tournament_id=eq.${id}` },
+        () => getEvents(id).then(setEvents).catch(() => {}))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [selected]);
+
+  // Finalizar si ya cerró (marca ganador + trofeo). Idempotente.
+  useEffect(() => {
+    if (selected?.ends_at && new Date(selected.ends_at).getTime() < Date.now() && !selected.finalized) {
+      finalizeTournament(selected.id).catch(() => {});
+    }
+  }, [selected]);
+
+  const onLeave = async () => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await leaveTournament(selected.id);
+      removeTournamentDomain(selected.id);
+      sfx.back(); setSelected(null); await reload();
+    } finally { setBusy(false); }
+  };
+
+  const onDelete = async () => {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await deleteTournament(selected.id);
+      removeTournamentDomain(selected.id);
+      sfx.back(); setSelected(null); await reload();
+    } finally { setBusy(false); }
+  };
 
   const copy = (what: 'link' | 'code', text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -224,8 +271,84 @@ function ListTab({ loading, tournaments, selected, setSelected, board, userId, o
                 );
               })}
             </div>
+
+            {/* Feed / crónicas */}
+            {events.length > 0 && (
+              <>
+                <div style={{ fontSize: 8, color: '#8b7355', letterSpacing: '0.2em', margin: '18px 0 10px' }}>CRÓNICAS</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 160, overflowY: 'auto' }}>
+                  {events.map(ev => {
+                    const who = board.find(b => b.user_id === ev.user_id)?.display_name ?? 'Alguien';
+                    return (
+                      <div key={ev.id} style={{ fontSize: 7, color: '#8b7355', lineHeight: 1.7, padding: '6px 8px', background: '#0c0604', borderLeft: '2px solid #2a1810' }}>
+                        <span style={{ color: '#c9b896' }}>{who}</span> {ev.text}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Gestión */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
+              {isOwner ? (
+                <>
+                  <button onClick={() => { sfx.click(); setEditing(true); }} disabled={busy} style={{ ...btnSmall, color: '#fbbf24', borderColor: '#d97706' }}>✎ EDITAR</button>
+                  <button onClick={onDelete} disabled={busy} style={{ ...btnSmall, color: '#f87171', borderColor: '#7f1d1d', background: '#160404' }}>🗑 BORRAR</button>
+                </>
+              ) : (
+                <button onClick={onLeave} disabled={busy} style={{ ...btnSmall, color: '#f87171', borderColor: '#7f1d1d', background: '#160404' }}>↤ SALIR DEL TORNEO</button>
+              )}
+            </div>
+
+            {editing && selected && (
+              <EditModal t={selected} onClose={() => setEditing(false)} onSaved={async () => { setEditing(false); sfx.success(); await reload(); }} />
+            )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal: editar torneo (owner) ─────────────────────────────────────────────
+function EditModal({ t, onClose, onSaved }: { t: Tournament; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(t.name);
+  const [beastId, setBeastId] = useState(t.beast_id);
+  const [ends, setEnds] = useState(t.ends_at ? t.ends_at.slice(0, 10) : '');
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      await updateTournament(t.id, { name: name.trim() || t.name, beast_id: beastId, ends_at: ends || null });
+      onSaved();
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(4,2,1,0.92)', backdropFilter: 'blur(4px)', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 440, border: '2px solid #92400e', background: '#0a0504', boxShadow: '8px 8px 0 #000', padding: '24px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ fontSize: 11, color: '#fbbf24', letterSpacing: '0.1em', textShadow: '2px 2px 0 #000', marginBottom: 4 }}>EDITAR TORNEO</div>
+        <Label text="NOMBRE" />
+        <input value={name} onChange={e => setName(e.target.value)} maxLength={40} style={inputStyle} />
+        <Label text="FECHA DEL PARCIAL" />
+        <input type="date" value={ends} onChange={e => setEnds(e.target.value)} style={inputStyle} />
+        <Label text="BESTIA" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(46px, 1fr))', gap: 5 }}>
+          {BEAST_LIST.map(b => {
+            const sel = beastId === b.id;
+            return (
+              <button key={b.id} onClick={() => setBeastId(b.id)} title={b.fullName} style={{ aspectRatio: '1', background: sel ? '#1c0e00' : '#0f0804', border: `2px solid ${sel ? '#d97706' : '#2a1810'}`, cursor: 'pointer', padding: 4 }}>
+                <img src={asset(b.spriteImg)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', imageRendering: 'pixelated', opacity: sel ? 1 : 0.6 }} />
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+          <button onClick={() => { sfx.click(); onClose(); }} style={{ ...btnSmall, flex: 1, color: '#6b5040', borderColor: '#2a1810' }}>CANCELAR</button>
+          <button onClick={save} disabled={busy} style={{ ...btnPrimary, flex: 2, fontSize: 9, padding: '11px 0' }}>{busy ? 'GUARDANDO...' : 'GUARDAR'}</button>
+        </div>
       </div>
     </div>
   );

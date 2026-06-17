@@ -8,6 +8,17 @@ export interface Tournament {
   owner_id: string;
   invite_code: string;
   ends_at: string | null;
+  winner_id: string | null;
+  finalized: boolean;
+  created_at: string;
+}
+
+export interface TournamentEvent {
+  id: string;
+  tournament_id: string;
+  user_id: string;
+  text: string;
+  mins: number;
   created_at: string;
 }
 
@@ -68,6 +79,53 @@ export async function getLeaderboard(tournamentId: string): Promise<LeaderboardR
 export async function addTournamentMins(tournamentId: string, mins: number): Promise<void> {
   if (mins <= 0) return;
   await supabase.rpc('add_tournament_mins', { tid: tournamentId, mins: Math.round(mins) });
+}
+
+// Editar (sólo owner, via RLS).
+export async function updateTournament(id: string, patch: Partial<Pick<Tournament, 'name' | 'beast_id' | 'ends_at'>>): Promise<void> {
+  const { error } = await supabase.from('tournaments').update(patch).eq('id', id);
+  if (error) throw error;
+}
+
+// Borrar el torneo (sólo owner).
+export async function deleteTournament(id: string): Promise<void> {
+  const { error } = await supabase.from('tournaments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Salir de un torneo (borra la propia membresía).
+export async function leaveTournament(id: string): Promise<void> {
+  const { data } = await supabase.auth.getUser();
+  const uid = data.user?.id;
+  if (!uid) return;
+  const { error } = await supabase.from('tournament_members').delete().eq('tournament_id', id).eq('user_id', uid);
+  if (error) throw error;
+}
+
+// Finaliza un torneo cerrado (marca ganador + trofeo). Idempotente.
+export async function finalizeTournament(id: string): Promise<Tournament | null> {
+  const { data } = await supabase.rpc('finalize_tournament', { tid: id });
+  return (data as Tournament) ?? null;
+}
+
+// Feed: registrar una crónica (fire-and-forget desde el juego).
+export async function addTournamentEvent(tournamentId: string, text: string, mins: number): Promise<void> {
+  const { data } = await supabase.auth.getUser();
+  const uid = data.user?.id;
+  if (!uid) return;
+  await supabase.from('tournament_events').insert({ tournament_id: tournamentId, user_id: uid, text, mins: Math.round(mins) });
+}
+
+// Feed: últimas crónicas del torneo.
+export async function getEvents(tournamentId: string, limit = 30): Promise<TournamentEvent[]> {
+  const { data, error } = await supabase
+    .from('tournament_events')
+    .select('*')
+    .eq('tournament_id', tournamentId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as TournamentEvent[];
 }
 
 // Link de invitación absoluto (respeta el base de la app).

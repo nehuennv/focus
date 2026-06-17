@@ -61,6 +61,7 @@ export function ProfileCard({ userId, onClose }: { userId: string; onClose: () =
             {/* Stats */}
             <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <Row label="HORAS DE FOCO" value={fmtMins(profile.total_mins)} />
+              {profile.tournament_wins > 0 && <Row label="TORNEOS GANADOS" value={`🏆 ${profile.tournament_wins}`} />}
               {cls && <Row label="CLASE" value={`${cls.icon} ${cls.name}`} />}
               {item && <Row label="RELIQUIA" value={`${item.icon} ${item.name}`} />}
               {profile.lore && (

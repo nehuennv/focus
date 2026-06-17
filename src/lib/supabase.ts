@@ -28,5 +28,6 @@ export interface ProfileRow {
   lore: string | null;
   total_mins: number;
   rank_index: number;
+  tournament_wins: number;
   created_at: string;
 }

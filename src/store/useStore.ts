@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { syncProfileStats } from '../lib/sync';
-import { addTournamentMins } from '../lib/tournaments';
+import { addTournamentMins, addTournamentEvent } from '../lib/tournaments';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -148,6 +148,7 @@ export interface FocusStore {
 
   createDomain: (name: string, dailyTargetHours: number, activeDaysPerWeek: number, beastId: string, avatar: string) => void;
   addTournamentDomain: (t: { id: string; name: string; beastId: string; code: string }) => void;
+  removeTournamentDomain: (tournamentId: string) => void;
   updateDomain: (id: string, patch: Partial<Pick<Domain, 'name' | 'dailyTargetHours' | 'activeDaysPerWeek' | 'beastId' | 'avatar'>>) => void;
   deleteDomain: (id: string) => void;
   completeAttack: (domainId: string, beastId: string, attackedMins: number) => void;
@@ -368,6 +369,11 @@ export const useStore = create<FocusStore>()(
         });
       },
 
+      // Quita el dominio ligado a un torneo (al salir/borrar el torneo).
+      removeTournamentDomain: (tournamentId) => set((state) => ({
+        domains: state.domains.filter(d => d.tournamentId !== tournamentId),
+      })),
+
       updateDomain: (id, patch) => set((state) => ({
         domains: state.domains.map(d => d.id === id ? { ...d, ...patch } : d),
       })),
@@ -452,7 +458,12 @@ export const useStore = create<FocusStore>()(
           // al torneo si el dominio está vinculado. No bloquea el juego.
           queueMicrotask(() => {
             void syncProfileStats(newTotalMins, newRankIndex);
-            if (domain.tournamentId) void addTournamentMins(domain.tournamentId, attackedMins);
+            if (domain.tournamentId) {
+              void addTournamentMins(domain.tournamentId, attackedMins);
+              const bName = BEASTS[beastId as keyof typeof BEASTS]?.name ?? 'la bestia';
+              const text = bossDefeated ? `derrotó a ${bName}` : `ofrendó ${Math.round(attackedMins)}m de foco`;
+              void addTournamentEvent(domain.tournamentId, text, attackedMins);
+            }
           });
 
           const updatedSessions = [
