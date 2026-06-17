@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BEASTS } from '../store/useStore';
 import type { ProfileRow } from '../lib/supabase';
+import { asset } from '../lib/asset';
 
 const FONT = '"Press Start 2P", monospace';
 
@@ -26,7 +27,7 @@ export function PlayerHud({ profile, onSignOut }: {
         cursor: 'default', maxWidth: open ? 260 : 160,
       }}
     >
-      <img src={`/${beast.spriteImg}`} alt={beast.name}
+      <img src={asset(beast.spriteImg)} alt={beast.name}
         style={{ width: 26, height: 26, imageRendering: 'pixelated', objectFit: 'contain', flexShrink: 0, filter: `drop-shadow(0 0 4px ${beast.color}aa)` }} />
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: 8, color: '#fbbf24', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.display_name}</div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { RitualTitle } from './RitualBackdrop';
 import { sfx } from '../lib/sfx';
+import { asset } from '../lib/asset';
 
 const FONT = '"Press Start 2P", monospace';
 
@@ -63,7 +64,7 @@ export function AuthScreen() {
       {/* ── Fondo atmosférico (imagen del lore) ── */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-        backgroundImage: 'url(/img/background-lore.png)',
+        backgroundImage: `url(${asset('img/background-lore.png')})`,
         backgroundSize: 'cover', backgroundPosition: 'bottom center',
         imageRendering: 'pixelated', opacity: 0.4,
         animation: 'auth-bgbreathe 12s ease-in-out infinite',

@@ -3,6 +3,7 @@ import { supabase, type ProfileRow } from '../lib/supabase';
 import { BEASTS } from '../store/useStore';
 import { RitualBackdrop } from './RitualBackdrop';
 import { sfx } from '../lib/sfx';
+import { asset } from '../lib/asset';
 
 const FONT = '"Press Start 2P", monospace';
 
@@ -164,9 +165,9 @@ export function ProfileSetup({ profile, userId, onDone }: {
               {/* Preview grande */}
               <div style={{ display: 'flex', gap: 16, marginBottom: 18, alignItems: 'center', padding: '12px 14px', border: '2px solid #2a1810', background: '#0f0804', position: 'relative', overflow: 'hidden' }}>
                 {selectedBeast.bgImg && (
-                  <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(/${selectedBeast.bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12 }} />
+                  <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${asset(selectedBeast.bgImg)})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.12 }} />
                 )}
-                <img src={`/${selectedBeast.spriteImg}`} alt={selectedBeast.name}
+                <img src={asset(selectedBeast.spriteImg)} alt={selectedBeast.name}
                   style={{ width: 56, height: 56, objectFit: 'contain', imageRendering: 'pixelated', flexShrink: 0, position: 'relative', filter: `drop-shadow(0 0 8px ${selectedBeast.color}aa)` }} />
                 <div style={{ position: 'relative' }}>
                   <div style={{ fontSize: 10, color: '#fbbf24', marginBottom: 6 }}>{selectedBeast.name}</div>
@@ -184,7 +185,7 @@ export function ProfileSetup({ profile, userId, onDone }: {
                       boxShadow: sel ? '0 0 10px rgba(217,119,6,0.35)' : 'none',
                       cursor: 'pointer', padding: 5, overflow: 'hidden', transition: 'all 0.1s',
                     }}>
-                      <img src={`/${b.spriteImg}`} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'contain', imageRendering: 'pixelated', opacity: sel ? 1 : 0.65 }} />
+                      <img src={asset(b.spriteImg)} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'contain', imageRendering: 'pixelated', opacity: sel ? 1 : 0.65 }} />
                     </button>
                   );
                 })}
@@ -229,9 +230,9 @@ export function ProfileSetup({ profile, userId, onDone }: {
               {/* Resumen */}
               <div style={{ display: 'flex', gap: 16, padding: '14px 16px', border: '2px solid #d97706', background: '#0f0804', boxShadow: '0 0 16px rgba(217,119,6,0.2)', marginBottom: 18, position: 'relative', overflow: 'hidden' }}>
                 {selectedBeast.bgImg && (
-                  <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(/${selectedBeast.bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.1 }} />
+                  <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${asset(selectedBeast.bgImg)})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.1 }} />
                 )}
-                <img src={`/${selectedBeast.spriteImg}`} alt={selectedBeast.name}
+                <img src={asset(selectedBeast.spriteImg)} alt={selectedBeast.name}
                   style={{ width: 64, height: 64, objectFit: 'contain', imageRendering: 'pixelated', flexShrink: 0, position: 'relative', filter: `drop-shadow(0 0 8px ${selectedBeast.color}aa)` }} />
                 <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, color: '#fbbf24', marginBottom: 8, textShadow: '2px 2px 0 #000' }}>{name.trim() || 'Iniciado'}</div>
