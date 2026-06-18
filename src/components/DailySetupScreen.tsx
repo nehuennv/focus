@@ -233,7 +233,10 @@ export function DailySetupScreen({ onStart, onClose }: DailySetupScreenProps) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 5 }}>
                 {BEAST_UNLOCK_ORDER.map(({ beastId }) => {
                   const beast = BEASTS[beastId];
-                  const unlocked = isBeastUnlocked(beastId, playerEraIndex, debugUnlockAll);
+                  // La bestia asignada por un torneo siempre es usable, aunque no
+                  // la tengas desbloqueada (la elige el torneo, no tu progresión).
+                  const isTournamentBeast = !!selectedDomain?.tournamentId && beastId === selectedDomain.beastId;
+                  const unlocked = isBeastUnlocked(beastId, playerEraIndex, debugUnlockAll || isTournamentBeast);
                   const sel = selectedBeastId === beastId;
                   return (
                     <button
